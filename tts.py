@@ -22,9 +22,9 @@
 
 import os
 
-input_dir = "_Input/"
 input_file = "sentences.txt"
 output_dir = "_Output/"
+padded_dir = output_dir + "padded/"
 #voice_id = "Zhiyu" 
 voice_id = "Lupe" 
 padding = 1 # How many seconds of silence at end of padded mp3s
@@ -32,9 +32,19 @@ voice_speed = 50 # percent
 
 print("Text to Speech using AWS Polly")
 
-with open(input_dir + input_file, "r") as file:
 
-	print("Opened file: " + input_dir + input_file)
+# Create directories
+os.mkdir(output_dir)
+print("Created directory: %s" % output_dir)
+
+os.mkdir(padded_dir)
+print("Created directory: %s" % padded_dir)
+
+
+
+with open(input_file, "r") as file:
+
+	print("Opened file: " + input_file)
 
 	for line in file:
 
@@ -66,8 +76,8 @@ with open(input_dir + input_file, "r") as file:
 
 
 		ffmpeg_cmd = '''
-		ffmpeg -i "{output_dir}{filename}" -y -af "apad=pad_dur=1" "{output_dir}padded/{filename}"
-		'''.format(output_dir=output_dir, filename=filename)
+		ffmpeg -i "{output_dir}{filename}" -y -af "apad=pad_dur=1" "{padded_dir}{filename}"
+		'''.format(output_dir=output_dir, filename=filename, padded_dir=padded_dir)
 		os.system(ffmpeg_cmd)
 		print(ffmpeg_cmd)
 
