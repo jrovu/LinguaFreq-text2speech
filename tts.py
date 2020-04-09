@@ -1,6 +1,26 @@
+# Name: Batch Text-to-speech
+# Author: Jonathan Rogivue
+# Last updated: 2020-04-09
+#----------------------------- 
+
+
+# USER STORY: 
+#-----------------------------
+# "As a language learner, 
+# I should be able to quickly convert a text file of sentences into audio files, 
+# so that I can practice listening to them"
+
+# TECHNICAL OVERVIEW:
+#-----------------------------
+# This script uses AWS Polly (text-to-speech engine), to create individual MP3 files from lines of text in a file
+
+# PREEQUISITES:
+#-----------------------------
+# - AWS account with AWS Polly enabled
+# - `aws` CLI
+# - python3
+
 import os
-
-
 
 input_dir = "_Input/"
 input_file = "sentences.txt"
@@ -46,8 +66,42 @@ with open(input_dir + input_file, "r") as file:
 
 
 		ffmpeg_cmd = '''
-		ffmpeg -i "{output_dir}{filename}" -af "apad=pad_dur=1" "{output_dir}padded/{filename}"
+		ffmpeg -i "{output_dir}{filename}" -y -af "apad=pad_dur=1" "{output_dir}padded/{filename}"
 		'''.format(output_dir=output_dir, filename=filename)
 		os.system(ffmpeg_cmd)
 		print(ffmpeg_cmd)
 
+
+
+
+#-------------------------------
+#------ Information ------------
+#-------------------------------
+
+
+# Polly Console: https://console.aws.amazon.com/polly/home/SynthesizeSpeech
+# Polly Voice ID list: https://docs.aws.amazon.com/polly/latest/dg/voicelist.html
+# - Chinese: "Zhiyu"
+# - Spanish: "Lupe"
+
+# POLLY EXAMPLE
+#aws polly synthesize-speech \ 
+#    --output-format mp3 \
+#    --voice-id Joanna \
+#    --text 'Hello, my name is Joanna. I learned about the W3C on 10/3 of last year.' \
+#    hello.mp3
+
+# CHANGE VOICE SPEED EXAMPLE
+#--text-type ssml
+#--text "<speak><prosody rate='50%'>这个人好是好，就是不适合</prosody></speak>"
+
+
+
+
+# WISHLIST/TODO
+# [_] "I should be able to specify a text file from the command line"
+# [_] "This should make the directories from scratch"
+# [_] Add padding equal to length of clip
+# [X] Adjustable Speed 
+# [_] Adjustable speed in CLI
+# [_] Background sounds eg coffee shop
