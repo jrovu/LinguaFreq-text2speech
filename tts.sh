@@ -28,7 +28,7 @@ do
 	   "${output_dir}${filename}"
 
 	
-	#ffmpeg -i "concat:${output}${filename}|${silence_file}" -c copy 
+	ffmpeg -i "concat:${output_dir}${filename}|${silence_file}" -c copy "${output_dir}padded/${filename}"
 
 
 
