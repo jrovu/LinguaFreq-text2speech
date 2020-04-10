@@ -18,13 +18,21 @@
 # This script uses AWS Polly (text-to-speech engine), to create individual MP3 files from lines of text in a file
 
 
-# PREEQUISITES:
+# PREREQUISITES:
 #-----------------------------
 # - AWS account (https://aws.amazon.com/)
 #     - Account with AWS Polly permission
 # - Mac homebrew (https://brew.sh/)
+#     - git (`brew install git`)
 #     - aws CLI (`brew install awscli`)
 #     - python3 (`brew install python3`)
+
+# HOW TO INSTALL & USE:
+#-----------------------------
+# 1. Git clone: `git clone https://github.com/Helicer/batch-text2speech.git`
+# 2. Change to the directory `batch-text2speech.git`
+# 3. Edit `sentences.txt`, put sentences you want to make speech for
+# 4. Run the program with `./tts.py`
 
 import os
 
