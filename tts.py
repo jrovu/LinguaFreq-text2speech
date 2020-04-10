@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Name: Batch Text-to-speech
 # Author: Jonathan Rogivue
 # Last updated: 2020-04-09
@@ -16,17 +18,18 @@
 
 # PREEQUISITES:
 #-----------------------------
-# - AWS account with AWS Polly enabled
-# - `aws` CLI
-# - python3
+# - AWS account (https://aws.amazon.com/)
+#     - Account with AWS Polly permission
+# - Mac homebrew (https://brew.sh/)
+#     - aws CLI (`brew install awscli`)
+#     - python3 (`brew install python3`)
 
 import os
 
 input_file = "sentences.txt"
 output_dir = "_Output/"
 padded_dir = output_dir + "padded/"
-#voice_id = "Zhiyu" 
-voice_id = "Lupe" 
+voice_id = "Lupe" # Lupe (ES), Zhiyu (CN)
 padding = 1 # How many seconds of silence at end of padded mp3s
 voice_speed = 50 # percent
 
@@ -34,11 +37,13 @@ print("Text to Speech using AWS Polly")
 
 
 # Create directories
-os.mkdir(output_dir)
-print("Created directory: %s" % output_dir)
 
-os.mkdir(padded_dir)
-print("Created directory: %s" % padded_dir)
+if not os.path.exists(output_dir):
+	os.mkdir(output_dir)
+	print("Created directory: %s" % output_dir)
+
+	os.mkdir(padded_dir)
+	print("Created directory: %s" % padded_dir)
 
 
 
@@ -72,14 +77,14 @@ with open(input_file, "r") as file:
 			output_dir=output_dir, \
 			filename=filename)
 		os.system(polly_cmd)
-		print(polly_cmd)
+		# print(polly_cmd) # Debug
 
 
 		ffmpeg_cmd = '''
-		ffmpeg -i "{output_dir}{filename}" -y -af "apad=pad_dur=1" "{padded_dir}{filename}"
+		ffmpeg -i "{output_dir}{filename}" -y -af -hide_banner -loglevel panic "apad=pad_dur=1" "{padded_dir}{filename}"
 		'''.format(output_dir=output_dir, filename=filename, padded_dir=padded_dir)
 		os.system(ffmpeg_cmd)
-		print(ffmpeg_cmd)
+		# print(ffmpeg_cmd) # Debug
 
 
 
