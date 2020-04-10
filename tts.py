@@ -26,6 +26,7 @@
 #     - git (`brew install git`)
 #     - aws CLI (`brew install awscli`)
 #     - python3 (`brew install python3`)
+#     - ffmpeg (`brew install ffmpeg`)
 
 # HOW TO INSTALL & USE:
 #-----------------------------
@@ -41,7 +42,7 @@ output_dir = "_Output/"
 padded_dir = output_dir + "padded/"
 voice_id = "Lupe" # Lupe (ES), Zhiyu (CN)
 padding = 1 # How many seconds of silence at end of padded mp3s
-voice_speed = 50 # percent
+voice_speed = 80 # percent
 
 print("Text to Speech using AWS Polly")
 
@@ -93,7 +94,7 @@ with open(input_file, "r") as file:
 
 
 		ffmpeg_cmd = '''
-		ffmpeg -i "{output_dir}{filename}" -y -af -hide_banner -loglevel panic "apad=pad_dur=1" "{padded_dir}{filename}"
+		ffmpeg -i "{output_dir}{filename}" -y  -hide_banner -loglevel panic  -af "apad=pad_dur=1" "{padded_dir}{filename}"
 		'''.format(output_dir=output_dir, filename=filename, padded_dir=padded_dir)
 		
 		# print(ffmpeg_cmd) # Debug
