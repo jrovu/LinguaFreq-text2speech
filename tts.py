@@ -2,7 +2,7 @@
 
 # Name: Batch Text-to-speech
 # Author: Jonathan Rogivue
-# Last updated: 2020-04-09
+# Last updated: 2020-04-10
 #----------------------------- 
 
 
@@ -12,9 +12,11 @@
 # I should be able to quickly convert a text file of sentences into audio files, 
 # so that I can practice listening to them"
 
+
 # TECHNICAL OVERVIEW:
 #-----------------------------
 # This script uses AWS Polly (text-to-speech engine), to create individual MP3 files from lines of text in a file
+
 
 # PREEQUISITES:
 #-----------------------------
@@ -36,8 +38,7 @@ voice_speed = 50 # percent
 print("Text to Speech using AWS Polly")
 
 
-# Create directories
-
+# Create directories for output
 if not os.path.exists(output_dir):
 	os.mkdir(output_dir)
 	print("Created directory: %s" % output_dir)
@@ -61,8 +62,9 @@ with open(input_file, "r") as file:
 		print("Processing: " + stripped_line)
 		print("-----------------")
 
+		# SSML & Prosody allows us to control the rate of speed
 		ssml_formatted_text = "<speak><prosody rate='{voice_speed}%'>{stripped_line}</prosody></speak>".format(voice_speed=voice_speed, stripped_line=stripped_line)
-		#print(ssml_formatted_text)
+		#print(ssml_formatted_text) # Debug
 		
 		# Build command for AWS Polly
 		polly_cmd = '''
@@ -76,21 +78,23 @@ with open(input_file, "r") as file:
 			ssml_formatted_text=ssml_formatted_text, \
 			output_dir=output_dir, \
 			filename=filename)
-		os.system(polly_cmd)
+		
 		# print(polly_cmd) # Debug
+		os.system(polly_cmd)
+		
 
 
 		ffmpeg_cmd = '''
 		ffmpeg -i "{output_dir}{filename}" -y -af -hide_banner -loglevel panic "apad=pad_dur=1" "{padded_dir}{filename}"
 		'''.format(output_dir=output_dir, filename=filename, padded_dir=padded_dir)
-		os.system(ffmpeg_cmd)
+		
 		# print(ffmpeg_cmd) # Debug
-
-
+		os.system(ffmpeg_cmd)
+		
 
 
 #-------------------------------
-#------ Information ------------
+#       Information
 #-------------------------------
 
 
@@ -112,10 +116,11 @@ with open(input_file, "r") as file:
 
 
 
-
-# WISHLIST/TODO
+#-------------------------------
+#       Wishlist / TODO
+#-------------------------------
 # [_] "I should be able to specify a text file from the command line"
-# [_] "This should make the directories from scratch"
+# [X] "This should make the directories from scratch"
 # [_] Add padding equal to length of clip
 # [X] Adjustable Speed 
 # [_] Adjustable speed in CLI
