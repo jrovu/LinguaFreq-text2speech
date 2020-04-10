@@ -28,14 +28,18 @@
 #     - python3 (`brew install python3`)
 #     - ffmpeg (`brew install ffmpeg`)
 
-# HOW TO INSTALL & USE:
+# HOW TO INSTALL 
 #-----------------------------
 # 1. Git clone: `git clone https://github.com/Helicer/batch-text2speech.git`
 # 2. Change to the directory `batch-text2speech.git`
 # 3. Edit `sentences.txt`, put sentences you want to make speech for
 # 4. Run the program with `./tts.py`
 
+# HOW TO INSTALL 
+#-----------------------------
+
 import os
+from datetime import datetime
 
 input_file = "sentences.txt"
 output_dir = "_Output/"
@@ -46,6 +50,7 @@ voice_speed = 80 # percent
 
 print("Text to Speech using AWS Polly")
 
+startTime = datetime.now()
 
 # Create directories for output
 if not os.path.exists(output_dir):
@@ -102,6 +107,11 @@ with open(input_file, "r") as file:
 		
 
 
+completionTime = datetime.now() - startTime
+
+print("-----------------")
+print("Completed time: ", str(completionTime))
+
 #-------------------------------
 #       Information
 #-------------------------------
@@ -134,3 +144,7 @@ with open(input_file, "r") as file:
 # [X] Adjustable Speed 
 # [_] Adjustable speed in CLI
 # [_] Background sounds eg coffee shop
+# [_] Wipe output folder each run
+# [_] Add timer
+# [_] <language 1> pause <language 2 / translation>
+# [_] Control naming ( lang1, lang2)
