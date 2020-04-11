@@ -41,22 +41,20 @@
 import os
 from datetime import datetime
 import shutil
+import csv
 
 
 
 input_file = "sentences.txt"
 output_dir = "_Output/"
-voice_id = "Lupe" # Lupe (ES), Zhiyu (CN)
+voice_id = "Zhiyu" # Lupe (ES), Zhiyu (CN)
 padding = 1 # How many seconds of silence at end of padded mp3s
 voice_speed = 80 # percent
 
 
 
 # Take line of text, and creates a text-to-speed audio file
-def text_to_speech(text, filename):
-    
-    # SSML & Prosody allows us to control the rate of speed
-    ssml_formatted_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(voice_speed=voice_speed, text=text)
+def generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename):
     
     # Build out command to call AWS Polly to generate speech files
     polly_cmd = '''
@@ -64,10 +62,10 @@ def text_to_speech(text, filename):
        --output-format mp3 \
        --text-type ssml \
        --voice-id {voice_id} \
-       --text "{ssml_formatted_text}" \
+       --text "{ssml_text}" \
        "{output_dir}{filename}"
     '''.format(voice_id=voice_id, \
-        ssml_formatted_text=ssml_formatted_text, \
+        ssml_text=ssml_text, \
         output_dir=output_dir, \
         filename=filename)
 
@@ -105,8 +103,54 @@ def tts_from_textfile(input_file):
             print("Processing: " + stripped_line)
             print("-----------------")
 
-            # Call text_to_speech(stripped line, filename)
-            text_to_speech(stripped_line, filename)
+            ssml_text =  "<speak><prosody rate='{voice_speed}%'>{stripped_line}</prosody></speak>".format(voice_speed=voice_speed, stripped_line=stripped_line)
+            generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename)
+
+
+
+
+def create_2phrase_ssml(language_1, phrase_1, language_2, phrase_2):
+
+    ssml_text = '''
+        <speak> 
+        <lang xml:lang='{language_1}'>{phrase_1}</lang>
+        <break time='1.5s'/>
+        <lang xml:lang='{language_2}'>{phrase_2}</lang>
+        <break time='0.5s'/>
+        </speak>
+        '''.format(
+        language_1=language_1,
+        phrase_1=phrase_1,
+        language_2=language_2,
+        phrase_2=phrase_2)
+
+    return ssml_text
+
+
+def tts_from_csv(input_file):
+    # debug
+    input_file = "phrases.csv"
+    language_1 = ""
+    language_2 = ""
+
+    row_counter = 0
+    with open(input_file) as cvs_file:
+        csv_reader = csv.reader(cvs_file, delimiter=',')
+        for row in csv_reader:
+
+            # Use column headers as ISO language codes (e.g. "en-US", "cmn-CN")
+            if row_counter is 0:
+                language_1 = row[0]
+                language_2 = row[1]
+                row_counter += 1
+            else:
+                phrase_1 = row[0]
+                phrase_2 = row[1]
+                ssml_text = create_2phrase_ssml(language_1, phrase_1, language_2, phrase_2)
+                filename = phrase_1 + " - " + phrase_2 + ".mp3"
+
+                generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename)
+
 
 
 
@@ -118,13 +162,14 @@ def main():
     create_output_directories()
 
     mode = "textfile"
+    mode = "csv"
 
     if mode is "textfile":
         print("Mode: Simple text file")
         tts_from_textfile(input_file)
     elif mode is "csv":
         print("Mode: CSV file")
-        #tts_from_csv()
+        tts_from_csv(input_file)
         pass
 
 
