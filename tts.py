@@ -221,13 +221,19 @@ if __name__ == "__main__":
 #-------------------------------
 #       Wishlist / TODO
 #-------------------------------
-# [X] <language 1> pause <language 2 / translation>
-# [_] Control naming ( lang1, lang2)
-# [_] Add padding equal to length of clip
-# [X] "This should make the directories from scratch"
-# [X] Adjustable Speed 
-# [X] Wipe output folder each run
-# [X] Add timer
+# [_] 2nd language should be "good" english
 # [_] Adjustable speed in CLI
+# [_] Say at fast speed, then repeat at slow speed
 # [_] "I should be able to specify a text file from the command line"
+# [_] Add padding equal to length of clip
 # [_] Background sounds eg coffee shop
+
+
+
+# DONE
+# [X] Control naming ( lang1, lang2)
+# [X] "This should make the directories from scratch"
+# [X] Adjustable voice speed 
+# [X] Add timer
+# [X] <language 1> pause <language 2 / translation>
+# [X] Wipe output folder each run
