@@ -44,11 +44,14 @@ import shutil
 import csv
 
 
-
+# TODO: User should be able to specify this at command line
 input_file = "sentences.txt"
 output_dir = "_Output/"
+
+# TODO: User should be able to specify this at command line
 voice_id = "Zhiyu" # Lupe (ES), Zhiyu (CN)
-padding = 1 # How many seconds of silence at end of padded mp3s
+
+padding = 0.5 # How many seconds of silence at end of padded mp3s
 voice_speed = 80 # percent
 
 
@@ -84,7 +87,7 @@ def create_output_directories():
     print("Created directory: %s" % output_dir)
 
 
-
+# For "Textfile mode" (input from a simple TXT)
 def tts_from_textfile(input_file):
 
     # Loop through the lines of text in a file
@@ -108,25 +111,31 @@ def tts_from_textfile(input_file):
 
 
 
-
+# "2 phrase" SSML template:
+# Creates SSML-formatted text based on a phrase, a pause, then its translation
 def create_2phrase_ssml(language_1, phrase_1, language_2, phrase_2):
 
     ssml_text = '''
-        <speak> 
-        <lang xml:lang='{language_1}'>{phrase_1}</lang>
-        <break time='1.5s'/>
-        <lang xml:lang='{language_2}'>{phrase_2}</lang>
-        <break time='0.5s'/>
+        <speak>
+            <prosody rate='{voice_speed}%'> 
+                <lang xml:lang='{language_1}'>{phrase_1}</lang>
+            </prosody>
+            <break time='1.5s'/>
+            <lang xml:lang='{language_2}'>{phrase_2}</lang>
+            <break time='{padding}s'/>
         </speak>
         '''.format(
+        voice_speed=voice_speed,
         language_1=language_1,
         phrase_1=phrase_1,
         language_2=language_2,
-        phrase_2=phrase_2)
+        phrase_2=phrase_2,
+        padding=padding)
 
     return ssml_text
 
 
+# "CSV mode" — Read from a 2-column CSV file
 def tts_from_csv(input_file):
     # debug
     input_file = "phrases.csv"
@@ -161,7 +170,8 @@ def main():
 
     create_output_directories()
 
-    mode = "textfile"
+    # TODO: User should be able to switch modes from command line (or file type)
+    #mode = "textfile"
     mode = "csv"
 
     if mode is "textfile":
@@ -211,7 +221,7 @@ if __name__ == "__main__":
 #-------------------------------
 #       Wishlist / TODO
 #-------------------------------
-# [_] <language 1> pause <language 2 / translation>
+# [X] <language 1> pause <language 2 / translation>
 # [_] Control naming ( lang1, lang2)
 # [_] Add padding equal to length of clip
 # [X] "This should make the directories from scratch"
