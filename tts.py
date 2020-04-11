@@ -43,9 +43,9 @@ from datetime import datetime
 import shutil
 
 
+
 input_file = "sentences.txt"
 output_dir = "_Output/"
-padded_dir = output_dir + "padded/"
 voice_id = "Lupe" # Lupe (ES), Zhiyu (CN)
 padding = 1 # How many seconds of silence at end of padded mp3s
 voice_speed = 80 # percent
@@ -71,33 +71,12 @@ def text_to_speech(text, filename):
         output_dir=output_dir, \
         filename=filename)
 
-    # print(polly_cmd) # Debug
+    #print(polly_cmd) # Debug
     os.system(polly_cmd)
 
-    pad_audio(filename)
 
 
-# Takes an existing audio file, and adds padding at the end
-def pad_audio(filename):
-    
-    # Build out command to add padding to existing MP3s
-    ffmpeg_cmd = '''
-    ffmpeg -i "{output_dir}{filename}" -y -hide_banner -loglevel panic -af "apad=pad_dur=1" "{padded_dir}{filename}"
-    '''.format(output_dir=output_dir, filename=filename, padded_dir=padded_dir)
-    
-    # print(ffmpeg_cmd) # Debug
-    os.system(ffmpeg_cmd)
-
-
-
-
-
-def main():
-    print("-----------------")
-    print("Text-to-speech using AWS Polly")
-    startTime = datetime.now() # Timer
-
-
+def create_output_directories():
     # Remove output from previous runs
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
@@ -106,9 +85,9 @@ def main():
     os.mkdir(output_dir)
     print("Created directory: %s" % output_dir)
 
-    os.mkdir(padded_dir)
-    print("Created directory: %s" % padded_dir)
 
+
+def tts_from_textfile(input_file):
 
     # Loop through the lines of text in a file
     with open(input_file, "r") as file:
@@ -128,6 +107,26 @@ def main():
 
             # Call text_to_speech(stripped line, filename)
             text_to_speech(stripped_line, filename)
+
+
+
+def main():
+    print("-----------------")
+    print("Text-to-speech using AWS Polly")
+    startTime = datetime.now() # Timer
+
+    create_output_directories()
+
+    mode = "textfile"
+
+    if mode is "textfile":
+        print("Mode: Simple text file")
+        tts_from_textfile(input_file)
+    elif mode is "csv":
+        print("Mode: CSV file")
+        #tts_from_csv()
+        pass
+
 
 
     # Timer
