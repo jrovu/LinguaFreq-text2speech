@@ -40,6 +40,8 @@
 
 import os
 from datetime import datetime
+import shutil
+
 
 input_file = "sentences.txt"
 output_dir = "_Output/"
@@ -48,69 +50,96 @@ voice_id = "Lupe" # Lupe (ES), Zhiyu (CN)
 padding = 1 # How many seconds of silence at end of padded mp3s
 voice_speed = 80 # percent
 
-print("Text to Speech using AWS Polly")
-
-startTime = datetime.now()
-
-# Create directories for output
-if not os.path.exists(output_dir):
-	os.mkdir(output_dir)
-	print("Created directory: %s" % output_dir)
-
-	os.mkdir(padded_dir)
-	print("Created directory: %s" % padded_dir)
 
 
+# Take line of text, and creates a text-to-speed audio file
+def text_to_speech(text, filename):
+    
+    # SSML & Prosody allows us to control the rate of speed
+    ssml_formatted_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(voice_speed=voice_speed, text=text)
+    
+    # Build out command to call AWS Polly to generate speech files
+    polly_cmd = '''
+        aws polly synthesize-speech \
+       --output-format mp3 \
+       --text-type ssml \
+       --voice-id {voice_id} \
+       --text "{ssml_formatted_text}" \
+       "{output_dir}{filename}"
+    '''.format(voice_id=voice_id, \
+        ssml_formatted_text=ssml_formatted_text, \
+        output_dir=output_dir, \
+        filename=filename)
 
-with open(input_file, "r") as file:
+    # print(polly_cmd) # Debug
+    os.system(polly_cmd)
 
-	print("Opened file: " + input_file)
-
-	for line in file:
-
-		# Strip newlines from the lines
-		stripped_line = line.strip()
-		filename = stripped_line + ".mp3"
-
-		print("-----------------")
-		print("Processing: " + stripped_line)
-		print("-----------------")
-
-		# SSML & Prosody allows us to control the rate of speed
-		ssml_formatted_text = "<speak><prosody rate='{voice_speed}%'>{stripped_line}</prosody></speak>".format(voice_speed=voice_speed, stripped_line=stripped_line)
-		#print(ssml_formatted_text) # Debug
-		
-		# Build command for AWS Polly
-		polly_cmd = '''
-			aws polly synthesize-speech \
-		   --output-format mp3 \
-		   --text-type ssml \
-		   --voice-id {voice_id} \
-		   --text "{ssml_formatted_text}" \
-		   "{output_dir}{filename}"
-		'''.format(voice_id=voice_id, \
-			ssml_formatted_text=ssml_formatted_text, \
-			output_dir=output_dir, \
-			filename=filename)
-		
-		# print(polly_cmd) # Debug
-		os.system(polly_cmd)
-		
+    pad_audio(filename)
 
 
-		ffmpeg_cmd = '''
-		ffmpeg -i "{output_dir}{filename}" -y  -hide_banner -loglevel panic  -af "apad=pad_dur=1" "{padded_dir}{filename}"
-		'''.format(output_dir=output_dir, filename=filename, padded_dir=padded_dir)
-		
-		# print(ffmpeg_cmd) # Debug
-		os.system(ffmpeg_cmd)
-		
+# Takes an existing audio file, and adds padding at the end
+def pad_audio(filename):
+    
+    # Build out command to add padding to existing MP3s
+    ffmpeg_cmd = '''
+    ffmpeg -i "{output_dir}{filename}" -y -hide_banner -loglevel panic -af "apad=pad_dur=1" "{padded_dir}{filename}"
+    '''.format(output_dir=output_dir, filename=filename, padded_dir=padded_dir)
+    
+    # print(ffmpeg_cmd) # Debug
+    os.system(ffmpeg_cmd)
 
 
-completionTime = datetime.now() - startTime
 
-print("-----------------")
-print("Completed time: ", str(completionTime))
+
+
+def main():
+    print("-----------------")
+    print("Text-to-speech using AWS Polly")
+    startTime = datetime.now() # Timer
+
+
+    # Remove output from previous runs
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+
+    # Create directories for output
+    os.mkdir(output_dir)
+    print("Created directory: %s" % output_dir)
+
+    os.mkdir(padded_dir)
+    print("Created directory: %s" % padded_dir)
+
+
+    # Loop through the lines of text in a file
+    with open(input_file, "r") as file:
+
+        print("Opened file: " + input_file)
+
+        for line in file:
+
+            # Strip newlines from the lines
+            stripped_line = line.strip()
+            filename = stripped_line + ".mp3"
+
+
+            print("-----------------")
+            print("Processing: " + stripped_line)
+            print("-----------------")
+
+            # Call text_to_speech(stripped line, filename)
+            text_to_speech(stripped_line, filename)
+
+
+    # Timer
+    completionTime = datetime.now() - startTime 
+    print("-----------------")
+    print("Completed time: ", str(completionTime))
+
+
+
+
+if __name__ == "__main__":
+    main()
 
 #-------------------------------
 #       Information
@@ -138,13 +167,13 @@ print("Completed time: ", str(completionTime))
 #-------------------------------
 #       Wishlist / TODO
 #-------------------------------
-# [_] "I should be able to specify a text file from the command line"
-# [X] "This should make the directories from scratch"
-# [_] Add padding equal to length of clip
-# [X] Adjustable Speed 
-# [_] Adjustable speed in CLI
-# [_] Background sounds eg coffee shop
-# [_] Wipe output folder each run
-# [_] Add timer
 # [_] <language 1> pause <language 2 / translation>
 # [_] Control naming ( lang1, lang2)
+# [_] Add padding equal to length of clip
+# [X] "This should make the directories from scratch"
+# [X] Adjustable Speed 
+# [X] Wipe output folder each run
+# [X] Add timer
+# [_] Adjustable speed in CLI
+# [_] "I should be able to specify a text file from the command line"
+# [_] Background sounds eg coffee shop
