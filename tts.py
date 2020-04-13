@@ -48,6 +48,11 @@ import csv
 input_file = "sentences.txt"
 output_dir = "_Output/"
 
+# TODO: User should be able to switch modes from command line (or file type)
+mode = "textfile" # "textfile", "csv"
+#mode = "csv"
+
+
 # TODO: User should be able to specify this at command line
 voice_id = "Zhiyu" # Lupe (ES), Zhiyu (CN)
 
@@ -106,7 +111,7 @@ def tts_from_textfile(input_file):
             print("Processing: " + stripped_line)
             print("-----------------")
 
-            ssml_text =  "<speak><prosody rate='{voice_speed}%'>{stripped_line}</prosody></speak>".format(voice_speed=voice_speed, stripped_line=stripped_line)
+            ssml_text =  "<speak><prosody rate='{voice_speed}%'>{stripped_line}</prosody><break time='{padding}s'/></speak>".format(voice_speed=voice_speed, stripped_line=stripped_line, padding=padding)
             generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename)
 
 
@@ -169,10 +174,6 @@ def main():
     startTime = datetime.now() # Timer
 
     create_output_directories()
-
-    # TODO: User should be able to switch modes from command line (or file type)
-    #mode = "textfile"
-    mode = "csv"
 
     if mode is "textfile":
         print("Mode: Simple text file")
