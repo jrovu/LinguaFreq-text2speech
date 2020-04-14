@@ -49,12 +49,11 @@ import logging
 
 
 
-
-
+# COMMAND LINE ARGUMENTS
 # Setup Aruments
 parser = argparse.ArgumentParser(description = "Text to speech. Takes a file as input, and converts the lines into MP3s.")
 
-# Describe Args
+# Arguments: 
 parser.add_argument("-v", "--verbose", 
     action="store_true", 
     help="Increase verbosity of the program")
@@ -93,7 +92,8 @@ parser.add_argument("-s", "--speed",
 # Assign arguments to SETTINGS variables
 args = parser.parse_args()
 
-# SETTINGS
+
+# SETTINGS VARIABLES
 mode = args.mode
 input_file = args.filename
 output_dir = args.output_dir
@@ -102,17 +102,28 @@ padding = args.padding
 voice_speed = args.speed
 
 
-# Configure & enable logging when --verbose 
+# LOGGING
+# - Configure & enable logging when --verbose 
 if args.verbose:
     logging.basicConfig(level=logging.DEBUG)
 
 logging.debug('Verbose / Debug mode enabled')
 
 
+# Deletes & creates output directory for MP3s
+def create_output_directories():
+    # Remove output from previous runs
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+
+    # Create directories for output
+    os.mkdir(output_dir)
+    print("Created directory: %s" % output_dir)
 
 
 
-# Take line of text, and creates a text-to-speed audio file
+# AWS POLLY call: 
+# - Take line of text, and creates a text-to-speed audio file
 def generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename):
     
     # Build out command to call AWS Polly to generate speech files
@@ -129,22 +140,15 @@ def generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename):
         filename=filename)
 
     logging.debug(polly_cmd) # Debug
+
+    # TODO: Update this to use Popen?
     os.system(polly_cmd)
 
 
 
-def create_output_directories():
-    # Remove output from previous runs
-    if os.path.exists(output_dir):
-        shutil.rmtree(output_dir)
 
-    # Create directories for output
-    os.mkdir(output_dir)
-    print("Created directory: %s" % output_dir)
-
-
-
-# For "Textfile mode" (input from a simple TXT)
+# Mode: SIMPLETEXT
+# - For "Textfile mode" (input from a simple TXT)
 def tts_from_textfile(input_file):
 
     # Loop through the lines of text in a file
@@ -154,10 +158,9 @@ def tts_from_textfile(input_file):
 
         for line in file:
 
-            # Strip newlines from the lines
+            # Strip newlines from the lines, else they appear in filenames
             stripped_line = line.strip()
             filename = stripped_line + ".mp3"
-
 
             print("-----------------")
             print("Processing: " + stripped_line)
@@ -165,34 +168,13 @@ def tts_from_textfile(input_file):
 
             ssml_text =  "<speak><prosody rate='{voice_speed}%'>{stripped_line}</prosody><break time='{padding}s'/></speak>".format(voice_speed=voice_speed, stripped_line=stripped_line, padding=padding)
             generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename)
+            # TODO: Use format/replace better
 
 
 
-# "2 phrase" SSML template:
-# Creates SSML-formatted text based on a phrase, a pause, then its translation
-def create_2phrase_ssml(language_1, phrase_1, language_2, phrase_2):
 
-    ssml_text = '''
-        <speak>
-            <prosody rate='{voice_speed}%'> 
-                <lang xml:lang='{language_1}'>{phrase_1}</lang>
-            </prosody>
-            <break time='1.5s'/>
-            <lang xml:lang='{language_2}'>{phrase_2}</lang>
-            <break time='{padding}s'/>
-        </speak>
-        '''.format(
-        voice_speed=voice_speed,
-        language_1=language_1,
-        phrase_1=phrase_1,
-        language_2=language_2,
-        phrase_2=phrase_2,
-        padding=padding)
-
-    return ssml_text
-
-
-# "CSV mode" — Read from a 2-column CSV file
+# Mode: CSV
+# - Read from a 2-column CSV file
 def tts_from_csv(input_file):
     language_1 = ""
     language_2 = ""
@@ -215,6 +197,31 @@ def tts_from_csv(input_file):
 
                 generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename)
 
+
+
+# SSML Template: 2 phrase
+# Creates SSML-formatted text based on a phrase, a pause, then its translation
+def create_2phrase_ssml(language_1, phrase_1, language_2, phrase_2):
+
+    ssml_text = '''
+        <speak>
+            <prosody rate='{voice_speed}%'> 
+                <lang xml:lang='{language_1}'>{phrase_1}</lang>
+            </prosody>
+            <break time='1.5s'/>
+            <lang xml:lang='{language_2}'>{phrase_2}</lang>
+            <break time='{padding}s'/>
+        </speak>
+        '''.format(
+        voice_speed=voice_speed,
+        language_1=language_1,
+        phrase_1=phrase_1,
+        language_2=language_2,
+        phrase_2=phrase_2,
+        padding=padding)
+        # TODO: Use format/replace better
+
+    return ssml_text
 
 
 
@@ -244,6 +251,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
 
 #-------------------------------
 #       Information
