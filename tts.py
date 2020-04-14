@@ -2,7 +2,7 @@
 
 # Name: Batch Text-to-speech
 # Author: Jonathan Rogivue
-# Last updated: 2020-04-10
+# Last updated: 2020-04-14
 #----------------------------- 
 
 
@@ -27,6 +27,8 @@
 #     - aws CLI (`brew install awscli`)
 #     - python3 (`brew install python3`)
 #     - ffmpeg (`brew install ffmpeg`)
+# - `awscli` configured (`aws comfigure`) with correct user
+
 
 # HOW TO INSTALL 
 #-----------------------------
@@ -34,9 +36,9 @@
 # 2. Change to the directory `batch-text2speech.git`
 # 3. Edit `sentences.txt`, put sentences you want to make speech for
 # 4. Run the program with `./tts.py`
+#
+# GET HELP by running `tts.py -h`
 
-# HOW TO INSTALL 
-#-----------------------------
 
 import os
 from datetime import datetime
@@ -88,9 +90,10 @@ parser.add_argument("-s", "--speed",
 
 # TODO: Add dry run
 
-# Assign arguments to variables
+# Assign arguments to SETTINGS variables
 args = parser.parse_args()
 
+# SETTINGS
 mode = args.mode
 input_file = args.filename
 output_dir = args.output_dir
@@ -99,12 +102,11 @@ padding = args.padding
 voice_speed = args.speed
 
 
-# Set logging
+# Configure & enable logging when --verbose 
 if args.verbose:
     logging.basicConfig(level=logging.DEBUG)
 
 logging.debug('Verbose / Debug mode enabled')
-
 
 
 
@@ -139,6 +141,7 @@ def create_output_directories():
     # Create directories for output
     os.mkdir(output_dir)
     print("Created directory: %s" % output_dir)
+
 
 
 # For "Textfile mode" (input from a simple TXT)
@@ -191,8 +194,6 @@ def create_2phrase_ssml(language_1, phrase_1, language_2, phrase_2):
 
 # "CSV mode" — Read from a 2-column CSV file
 def tts_from_csv(input_file):
-    # debug
-    #input_file = "phrases.csv"
     language_1 = ""
     language_2 = ""
 
