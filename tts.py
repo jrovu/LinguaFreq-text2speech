@@ -48,34 +48,59 @@ import argparse
 import logging
 
 
-# TODO: User should be able to specify this at command line
-input_file = "sentences.txt"
-output_dir = "_Output/"
-
-# TODO: User should be able to switch modes from command line (or file type)
-mode = "textfile" # "textfile", "csv"
-#mode = "csv"
-
-
-# TODO: User should be able to specify this at command line
-voice_id = "Zhiyu" # Lupe (ES), Zhiyu (CN)
-
-padding = 0.5 # How many seconds of silence at end of padded mp3s
-voice_speed = 80 # percent
 
 
 
-# Aruments
+# Setup Aruments
 parser = argparse.ArgumentParser(description = "Text to speech")
 
-# Args
-parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
-#parser.add_argument("-m"), "--mode"
+# Describe Args
+parser.add_argument("-v", "--verbose", 
+    action="store_true", 
+    help="increase output verbosity")
+
+parser.add_argument("-m", "--mode", 
+    choices=["simpletext", "csv"], 
+    required=True, 
+    help="Use a simple text file ('simpletext'), or a CSV ('csv')")
+
+parser.add_argument("-f", "--filename", 
+    required=True, 
+    help="Name of the input file")
+
+parser.add_argument("-o", "--output_dir", 
+    default="_TTS-Output/", 
+    help="Directory where output files will be saved")
+
+parser.add_argument("--voice", 
+    required=True, 
+    help="Voice ID of AWS Polly voice. See list of available voices: https://docs.aws.amazon.com/polly/latest/dg/voicelist.html")
+    # Examples: "Lupe" (ES), "Zhiyu" (CN)
+
+parser.add_argument("-p", "--padding", 
+    type=int, 
+    default=0.5, 
+    help="How many seconds of padding to add to end of sound file")
+
+parser.add_argument("-s", "--speed", 
+    type=int, 
+    default=100, 
+    help="Voice speed rate (in percentages)")
 
 
+
+# Assign arguments
 args = parser.parse_args()
 
+mode = args.mode
+input_file = args.filename
+output_dir = args.output_dir
+voice_id = args.voice
+padding = args.padding
+voice_speed = args.speed
 
+
+# Set logging
 if args.verbose:
     logging.basicConfig(level=logging.DEBUG)
 
@@ -85,9 +110,6 @@ logging.debug('Verbose / Debug mode enabled')
 
 
 
-# Arguments
-# mode (simpletext, csv)
-# verbose
 
 # Take line of text, and creates a text-to-speed audio file
 def generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename):
@@ -203,13 +225,17 @@ def main():
 
     create_output_directories()
 
-    if mode is "textfile":
-        print("Mode: Simple text file")
-        tts_from_textfile(input_file)
-    elif mode is "csv":
+    print(mode)
+
+    if mode == "csv":
         print("Mode: CSV file")
         tts_from_csv(input_file)
-        pass
+    elif mode == "simpletext":
+        print("Mode: Simple text file")
+        tts_from_textfile(input_file)
+    
+
+
 
 
 
