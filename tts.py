@@ -44,6 +44,10 @@ import shutil
 import csv
 
 
+import argparse 
+import logging
+
+
 # TODO: User should be able to specify this at command line
 input_file = "sentences.txt"
 output_dir = "_Output/"
@@ -61,6 +65,30 @@ voice_speed = 80 # percent
 
 
 
+# Aruments
+parser = argparse.ArgumentParser(description = "Text to speech")
+
+# Args
+parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
+#parser.add_argument("-m"), "--mode"
+
+
+args = parser.parse_args()
+
+
+if args.verbose:
+    logging.basicConfig(level=logging.DEBUG)
+
+logging.debug('Verbose / Debug mode enabled')
+
+
+
+
+
+# Arguments
+# mode (simpletext, csv)
+# verbose
+
 # Take line of text, and creates a text-to-speed audio file
 def generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename):
     
@@ -77,7 +105,7 @@ def generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename):
         output_dir=output_dir, \
         filename=filename)
 
-    #print(polly_cmd) # Debug
+    logging.debug(polly_cmd) # Debug
     os.system(polly_cmd)
 
 
