@@ -42,8 +42,6 @@ import os
 from datetime import datetime
 import shutil
 import csv
-
-
 import argparse 
 import logging
 
@@ -52,17 +50,18 @@ import logging
 
 
 # Setup Aruments
-parser = argparse.ArgumentParser(description = "Text to speech")
+parser = argparse.ArgumentParser(description = "Text to speech. Takes a file as input, and converts the lines into MP3s.")
 
 # Describe Args
 parser.add_argument("-v", "--verbose", 
     action="store_true", 
-    help="increase output verbosity")
+    help="Increase verbosity of the program")
 
 parser.add_argument("-m", "--mode", 
     choices=["simpletext", "csv"], 
     required=True, 
-    help="Use a simple text file ('simpletext'), or a CSV ('csv')")
+    help="Determines which mode to use. A simple text file ('simpletext'), or a CSV ('csv')")
+    # TODO: Determine mode from file format
 
 parser.add_argument("-f", "--filename", 
     required=True, 
@@ -70,26 +69,26 @@ parser.add_argument("-f", "--filename",
 
 parser.add_argument("-o", "--output_dir", 
     default="_TTS-Output/", 
-    help="Directory where output files will be saved")
+    help="Directory where output files will be saved. WARNING: This directory is deleted each time the program is run.")
 
 parser.add_argument("--voice", 
     required=True, 
-    help="Voice ID of AWS Polly voice. See list of available voices: https://docs.aws.amazon.com/polly/latest/dg/voicelist.html")
+    help="Voice ID of AWS Polly voice to use for the voice of the non-English audio. See list of available voices: https://docs.aws.amazon.com/polly/latest/dg/voicelist.html")
     # Examples: "Lupe" (ES), "Zhiyu" (CN)
 
 parser.add_argument("-p", "--padding", 
     type=int, 
     default=0.5, 
-    help="How many seconds of padding to add to end of sound file")
+    help="Number of SECONDS of padding to add to end of sound file (better for playlists)")
 
 parser.add_argument("-s", "--speed", 
     type=int, 
     default=100, 
-    help="Voice speed rate (in percentages)")
+    help="Voice speed rate (in PERCENTAGE)")
 
+# TODO: Add dry run
 
-
-# Assign arguments
+# Assign arguments to variables
 args = parser.parse_args()
 
 mode = args.mode
@@ -193,7 +192,7 @@ def create_2phrase_ssml(language_1, phrase_1, language_2, phrase_2):
 # "CSV mode" — Read from a 2-column CSV file
 def tts_from_csv(input_file):
     # debug
-    input_file = "phrases.csv"
+    #input_file = "phrases.csv"
     language_1 = ""
     language_2 = ""
 
@@ -233,16 +232,11 @@ def main():
     elif mode == "simpletext":
         print("Mode: Simple text file")
         tts_from_textfile(input_file)
-    
-
-
-
-
 
     # Timer
     completionTime = datetime.now() - startTime 
     print("-----------------")
-    print("Completed time: ", str(completionTime))
+    print("Completed time: ", str(completionTime)) # TODO: Format time better
 
 
 
@@ -277,11 +271,10 @@ if __name__ == "__main__":
 #       Wishlist / TODO
 #-------------------------------
 # [_] 2nd language should be "good" english
-# [_] Adjustable speed in CLI
 # [_] Say at fast speed, then repeat at slow speed
-# [_] "I should be able to specify a text file from the command line"
 # [_] Add padding equal to length of clip
 # [_] Background sounds eg coffee shop
+# [_] Performance: Async calls?
 
 
 
@@ -292,3 +285,5 @@ if __name__ == "__main__":
 # [X] Add timer
 # [X] <language 1> pause <language 2 / translation>
 # [X] Wipe output folder each run
+# [X] "I should be able to specify a text file from the command line"
+# [X] Adjustable speed in CLI
