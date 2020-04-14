@@ -72,9 +72,14 @@ parser.add_argument("-o", "--output_dir",
     default="_TTS-Output/", 
     help="Directory where output files will be saved. WARNING: This directory is deleted each time the program is run.")
 
-parser.add_argument("--voice", 
+parser.add_argument("-v1", "--voice1", 
     required=True, 
-    help="Voice ID of AWS Polly voice to use for the voice of the non-English audio. See list of available voices: https://docs.aws.amazon.com/polly/latest/dg/voicelist.html")
+    help="Voice ID of AWS Polly voice to use for the VOICE #1. See list of available voices: https://docs.aws.amazon.com/polly/latest/dg/voicelist.html")
+    # Examples: "Lupe" (ES), "Zhiyu" (CN)
+
+parser.add_argument("-v2", "--voice2", 
+    default="Salli",
+    help="Voice ID of AWS Polly voice to use for the VOICE #2. See list of available voices: https://docs.aws.amazon.com/polly/latest/dg/voicelist.html")
     # Examples: "Lupe" (ES), "Zhiyu" (CN)
 
 parser.add_argument("-p", "--padding", 
@@ -97,7 +102,8 @@ args = parser.parse_args()
 mode = args.mode
 input_file = args.filename
 output_dir = args.output_dir
-voice_id = args.voice
+voice_id = args.voice1
+voice2_id = args.voice2
 padding = args.padding
 voice_speed = args.speed
 
@@ -143,6 +149,7 @@ def generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename):
 
     # TODO: Update this to use Popen?
     os.system(polly_cmd)
+    # TODO: Trap aws CLI call output: https://stackoverflow.com/questions/3503879/assign-output-of-os-system-to-a-variable-and-prevent-it-from-being-displayed-on
 
 
 
