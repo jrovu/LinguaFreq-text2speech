@@ -190,19 +190,18 @@ def tts_from_csv(input_file):
     with open(input_file) as cvs_file:
         csv_reader = csv.reader(cvs_file, delimiter=',')
         for row in csv_reader:
+            pass
+            # phrase_clip[0] =  create_audio_from_ssml(voice1_id, "<speak><prosody rate='{rate}'>{row[0]}</prosody><break ...></speak>")
+            # phrase_clip[1] =  create_audio_from_ssml(voice2_id, "<speak><prosody rate='{rate}'>{row[1]}</prosody><break ...></speak>")
+            # phrase_clip[2] =  create_audio_from_ssml(voice1_id, "<speak><prosody rate='{rate}'>{row[2]}</prosody><break ...></speak>")
+            # phrase_clip[3] =  create_audio_from_ssml(voice2_id, "<speak><prosody rate='{rate}'>{row[3]}</prosody><break ...></speak>")
 
-            # Use column headers as ISO language codes (e.g. "en-US", "cmn-CN")
-            if row_counter is 0:
-                language_1 = row[0]
-                language_2 = row[1]
-                row_counter += 1
-            else:
-                phrase_1 = row[0]
-                phrase_2 = row[1]
-                ssml_text = create_2phrase_ssml(language_1, phrase_1, language_2, phrase_2)
-                filename = phrase_1 + " - " + phrase_2 + ".mp3"
+            # https://superuser.com/questions/314239/how-to-join-merge-many-mp3-files
+            # output_file = concat_phrase_clips(phrase_clip_filenames)
 
-                generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename)
+            # ffmpeg -i "concat:{f1}|{f2}|{f3}|{f4}"  -acodec copy {filename}.txt
+
+
 
 
 
