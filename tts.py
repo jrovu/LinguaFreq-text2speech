@@ -102,7 +102,7 @@ args = parser.parse_args()
 mode = args.mode
 input_file = args.filename
 output_dir = args.output_dir
-voice_id = args.voice1
+voice1_id = args.voice1
 voice2_id = args.voice2
 padding = args.padding
 voice_speed = args.speed
@@ -124,6 +124,7 @@ def create_output_directories():
 
     # Create directories for output
     os.mkdir(output_dir)
+    os.mkdir(output_dir + "Combined")
     print("Created directory: %s" % output_dir)
 
 
@@ -179,27 +180,67 @@ def tts_from_textfile(input_file):
 
 
 
+def create_audio_from_ssml(voice_id, ssml_text, filename):
+    logging.debug("Voice ID: " + voice_id)
+    logging.debug("SSML: " + ssml_text)
+    logging.debug("Filename: " + filename)
+
+
+    # Build out command to call AWS Polly to generate speech files
+    polly_cmd = '''
+        aws polly synthesize-speech \
+       --output-format mp3 \
+       --text-type ssml \
+       --voice-id {voice_id} \
+       --text "{ssml_text}" \
+       "{filename}"
+    '''.format(voice_id=voice_id, \
+        ssml_text=ssml_text, \
+        output_dir=output_dir, \
+        filename=filename)
+
+    logging.debug("Polly CMD: " + polly_cmd) # Debug
+    os.system(polly_cmd)
+
 
 # Mode: CSV
 # - Read from a 2-column CSV file
 def tts_from_csv(input_file):
-    language_1 = ""
-    language_2 = ""
 
-    row_counter = 0
+    phrase_clip_file = []
+
     with open(input_file) as cvs_file:
         csv_reader = csv.reader(cvs_file, delimiter=',')
         for row in csv_reader:
-            pass
-            # phrase_clip[0] =  create_audio_from_ssml(voice1_id, "<speak><prosody rate='{rate}'>{row[0]}</prosody><break ...></speak>")
-            # phrase_clip[1] =  create_audio_from_ssml(voice2_id, "<speak><prosody rate='{rate}'>{row[1]}</prosody><break ...></speak>")
-            # phrase_clip[2] =  create_audio_from_ssml(voice1_id, "<speak><prosody rate='{rate}'>{row[2]}</prosody><break ...></speak>")
-            # phrase_clip[3] =  create_audio_from_ssml(voice2_id, "<speak><prosody rate='{rate}'>{row[3]}</prosody><break ...></speak>")
+
+            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='1s'/></speak>".format(voice_speed=voice_speed, text=row[0])
+            filename_0 = output_dir + voice1_id + " - " + row[0] + ".mp3"
+            create_audio_from_ssml(voice1_id, ssml_text, filename_0)
+
+            ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0.3s'/></speak>".format(voice_speed=voice_speed, text=row[1])
+            filename_1 = output_dir + voice2_id + " - " + row[1] + ".mp3"
+            create_audio_from_ssml(voice2_id, ssml_text, filename_1)
+
+            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='4s'/></speak>".format(voice_speed=voice_speed, text=row[2])
+            filename_2 = output_dir + voice1_id + " - " + row[2] + ".mp3"
+            create_audio_from_ssml(voice1_id, ssml_text, filename_2)
+
+            ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0.5s'/></speak>".format(voice_speed=voice_speed, text=row[3])
+            filename_3 = output_dir + voice2_id + " - " + row[3] + ".mp3"
+            create_audio_from_ssml(voice2_id, ssml_text, filename_3)
 
             # https://superuser.com/questions/314239/how-to-join-merge-many-mp3-files
             # output_file = concat_phrase_clips(phrase_clip_filenames)
 
+            ffmpeg_cmd = "ffmpeg -i \"concat:{f0}|{f1}|{f2}|{f3}\" -acodec copy \"{output_dir}Combined/{p1} - {p2}.mp3\"".format(
+                f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir)
+
+            logging.debug(ffmpeg_cmd)
+
+            os.system(ffmpeg_cmd)
+
             # ffmpeg -i "concat:{f1}|{f2}|{f3}|{f4}"  -acodec copy {filename}.txt
+            print("-")
 
 
 
