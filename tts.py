@@ -209,6 +209,7 @@ def tts_from_csv(input_file):
 
     phrase_clip_file = []
 
+    row_count = 0
     with open(input_file) as cvs_file:
         csv_reader = csv.reader(cvs_file, delimiter=',')
         for row in csv_reader:
@@ -232,11 +233,11 @@ def tts_from_csv(input_file):
             # https://superuser.com/questions/314239/how-to-join-merge-many-mp3-files
             # output_file = concat_phrase_clips(phrase_clip_filenames)
 
-            ffmpeg_cmd = "ffmpeg -i \"concat:{f0}|{f1}|{f2}|{f3}\" -acodec copy \"{output_dir}Combined/{p1} - {p2}.mp3\"".format(
-                f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir)
+            ffmpeg_cmd = "ffmpeg -i \"concat:{f0}|{f1}|{f2}|{f3}\" -acodec copy \"{output_dir}Combined/{row_count} {p1} - {p2}.mp3\"".format(
+                f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir, row_count=row_count)
 
+            row_count += 1
             logging.debug(ffmpeg_cmd)
-
             os.system(ffmpeg_cmd)
 
             # ffmpeg -i "concat:{f1}|{f2}|{f3}|{f4}"  -acodec copy {filename}.txt
@@ -329,7 +330,7 @@ if __name__ == "__main__":
 #-------------------------------
 #       Wishlist / TODO
 #-------------------------------
-# [_] 2nd language should be "good" english
+# [X] 2nd language should be "good" english
 # [_] Say at fast speed, then repeat at slow speed
 # [_] Add padding equal to length of clip
 # [_] Background sounds eg coffee shop
