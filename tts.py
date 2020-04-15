@@ -209,7 +209,7 @@ def tts_from_csv(input_file):
 
     phrase_clip_file = []
 
-    row_count = 0
+    row_count = 1
     with open(input_file) as cvs_file:
         csv_reader = csv.reader(cvs_file, delimiter=',')
         for row in csv_reader:
