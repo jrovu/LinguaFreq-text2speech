@@ -37,6 +37,13 @@
 # --text-type ssml
 # --text "<speak><prosody rate='50%'>这个人好是好，就是不适合</prosody></speak>"
 
+# TERMINOLOGY & ABBREVIATIONS
+# -------------------------------
+# "EW" = English Word
+# "EP" = English Phrase
+# "FW" = Foreign Word
+# "FP" = Foreign Phrase
+
 
 # PREREQUISITES:
 # -----------------------------
@@ -113,6 +120,16 @@ parser.add_argument("-s", "--speed",
                     default=100,
                     help="Voice speed rate (in PERCENTAGE)")
 
+parser.add_argument("-v1e", "--voice1_engine",
+                    choices=["standard", "neural"],
+                    default="standard",
+                    help="Allows you to set the voice engine (for VOICE 1), if supported")
+
+parser.add_argument("-v2e", "--voice2_engine",
+                    choices=["standard", "neural"],
+                    default="standard",
+                    help="Allows you to set the voice engine (for VOICE 1), if supported")
+
 # TODO: Add dry run
 
 # Assign arguments to SETTINGS variables
@@ -126,6 +143,8 @@ voice1_id = args.voice1
 voice2_id = args.voice2
 padding = args.padding
 voice_speed = args.speed
+voice1_engine = args.voice1_engine
+voice2_engine = args.voice2_engine
 
 
 template_1_dir = "FW-EW/"
@@ -209,7 +228,7 @@ def tts_from_textfile(input_file):
             # TODO: Use format/replace better
 
 
-def create_audio_from_ssml(voice_id, ssml_text, filename):
+def create_audio_from_ssml(voice_id, engine, ssml_text, filename):
     logging.debug("Voice ID: " + voice_id)
     logging.debug("SSML: " + ssml_text)
     logging.debug("Filename: " + filename)
@@ -220,9 +239,11 @@ def create_audio_from_ssml(voice_id, ssml_text, filename):
        --output-format mp3 \
        --text-type ssml \
        --voice-id {voice_id} \
+       --engine {engine} \
        --text "{ssml_text}" \
        "{filename}"
     '''.format(voice_id=voice_id,
+               engine=engine,
                ssml_text=ssml_text,
                output_dir=output_dir,
                filename=filename)
@@ -240,34 +261,38 @@ def tts_from_csv(input_file):
     with open(input_file) as cvs_file:
         csv_reader = csv.reader(cvs_file, delimiter=',')
         for row in csv_reader:
+
+            # FW - Foreign Word
             ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[0])
             filename_0 = output_dir + voice1_id + " - " + row[0] + ".mp3"
-            create_audio_from_ssml(voice1_id, ssml_text, filename_0)
+            create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, filename_0)
 
+            # EW - English Word
             ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[1])
             filename_1 = output_dir + voice2_id + " - " + row[1] + ".mp3"
-            create_audio_from_ssml(voice2_id, ssml_text, filename_1)
+            create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, filename_1)
 
+            # FP - Foreign Phrase
             ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[2])
             filename_2 = output_dir + voice1_id + " - " + row[2] + ".mp3"
-            create_audio_from_ssml(voice1_id, ssml_text, filename_2)
+            create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, filename_2)
 
+            # EP - English Phrase
             ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[3])
             filename_3 = output_dir + voice2_id + " - " + row[3] + ".mp3"
-            create_audio_from_ssml(voice2_id, ssml_text, filename_3)
+            create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, filename_3)
 
-            print(filename_0)
 
             # Combine the individual speech files into lessons based on templates
 
             # Reference:
             # https://ffmpeg.org/ffmpeg-filters.html#Filtergraph-syntax-1
 
-            # Template 1: FW - pause - EW - pause
+            # Template 1: "FW - pause - EW - pause"
             ffmpeg_cmd_1 = "ffmpeg \
              -f lavfi -i anullsrc \
              -i \"{f0}\" \
@@ -288,7 +313,7 @@ def tts_from_csv(input_file):
              [0]atrim=duration=1[pause1];\
              [0]atrim=duration=0.5[pause2];\
              [2][pause1][1][pause2]concat=n=4:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p1} - {p2} (T2).mp3\"".format(f0=filename_0, f1=filename_1, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_2_dir,
+             \"{output_dir}{template_dir}{row_count} - {p2} - {p1} (T2).mp3\"".format(f0=filename_0, f1=filename_1, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_2_dir,
                 row_count=row_count)
 
 
@@ -305,7 +330,7 @@ def tts_from_csv(input_file):
              [0]atrim=duration=4[pause3];\
             [0]atrim=duration=0.5[pause4];\
              [1][pause1][2][pause2][3][pause3][4][pause4]concat=n=8:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p1} - {p2} (T3).mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_3_dir,
+             \"{output_dir}{template_dir}{row_count} - {p1} - {p2} - {p3} (T3).mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_3_dir,
                 row_count=row_count)
 
             # Template 4: "EW-FW-EP-FP/"
@@ -321,7 +346,7 @@ def tts_from_csv(input_file):
              [0]atrim=duration=4[pause3];\
             [0]atrim=duration=0.5[pause4];\
              [2][pause1][1][pause2][4][pause3][3][pause4]concat=n=8:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p2} - {p1} (T4).mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_4_dir,
+             \"{output_dir}{template_dir}{row_count} - {p2} - {p1} - {p3} (T4).mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_4_dir,
                 row_count=row_count)
 
             # Template 5: "EP/"
@@ -331,7 +356,7 @@ def tts_from_csv(input_file):
              -filter_complex \"\
              [0]atrim=duration=1[pause1];\
              [1][pause1]concat=n=2:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} {p2} (T5).mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[1], p2=row[3], output_dir=output_dir, template_dir=template_5_dir,
+             \"{output_dir}{template_dir}{row_count} - {p2} (T5).mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[1], p2=row[3], output_dir=output_dir, template_dir=template_5_dir,
                 row_count=row_count)
 
 
@@ -343,7 +368,7 @@ def tts_from_csv(input_file):
              -filter_complex \"\
              [0]atrim=duration=1[pause1];\
              [1][pause1]concat=n=2:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} {p1} (T6).mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[2], output_dir=output_dir, template_dir=template_6_dir,
+             \"{output_dir}{template_dir}{row_count} - {p1} (T6).mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[2], output_dir=output_dir, template_dir=template_6_dir,
                 row_count=row_count)
 
 
