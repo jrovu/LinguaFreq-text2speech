@@ -1,0 +1,38 @@
+
+# How to concat multiple audio files, and add a silent gap
+# https://superuser.com/questions/1120040/ffmpeg-concatenate-audio-and-offset-parts-between-each-other
+ffmpeg -i 1.mp3 -i 2.mp3 -i 3.mp3 -f lavfi -i anullsrc -filter_complex \
+       "[3]atrim=duration=1[g1];[3]atrim=duration=3[g2];
+        [0][g1][1][g2][2]concat=n=5:v=0:a=1"  out.mp3
+
+
+# https://ffmpeg.org/ffmpeg-filters.html#atrim
+
+ffmpeg \
+ -i 1.mp3 \
+ -i 2.mp3 \
+ -i 3.mp3 \
+ -f lavfi -i anullsrc \
+ -filter_complex \
+       "[3]atrim=duration=1[g1];[3]atrim=duration=3[g2];
+        [0][g1][1][g2][2]concat=n=5:v=0:a=1"  \
+ _out.mp3
+
+
+
+
+ffmpeg \
+ -f lavfi -i anullsrc \
+ -i "_TTS-Output/Lupe - casa.mp3" \
+ -i "_TTS-Output/Joanna - house.mp3" \
+ -i "_TTS-Output/Lupe - Estoy en casa..mp3" \
+ -i "_TTS-Output/Joanna - I am at home..mp3" \
+ -filter_complex "\
+ [0]atrim=duration=1[pause1];\
+ [0]atrim=duration=1[pause2];\
+ [0]atrim=duration=4[pause3];\
+ [1][pause1][2][pause2][3][pause3][4]concat=n=7:v=0:a=1"  \
+ _out.mp3
+
+
+ # W1 <1 sec> W2 <1 sec> P1 <4 sec> P2

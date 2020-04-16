@@ -226,22 +226,22 @@ def tts_from_csv(input_file):
     with open(input_file) as cvs_file:
         csv_reader = csv.reader(cvs_file, delimiter=',')
         for row in csv_reader:
-            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='1s'/></speak>".format(
+            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[0])
             filename_0 = output_dir + voice1_id + " - " + row[0] + ".mp3"
             create_audio_from_ssml(voice1_id, ssml_text, filename_0)
 
-            ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0.3s'/></speak>".format(
+            ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[1])
             filename_1 = output_dir + voice2_id + " - " + row[1] + ".mp3"
             create_audio_from_ssml(voice2_id, ssml_text, filename_1)
 
-            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='4s'/></speak>".format(
+            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[2])
             filename_2 = output_dir + voice1_id + " - " + row[2] + ".mp3"
             create_audio_from_ssml(voice1_id, ssml_text, filename_2)
 
-            ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0.5s'/></speak>".format(
+            ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[3])
             filename_3 = output_dir + voice2_id + " - " + row[3] + ".mp3"
             create_audio_from_ssml(voice2_id, ssml_text, filename_3)
@@ -258,7 +258,7 @@ def tts_from_csv(input_file):
             os.system(ffmpeg_cmd)
 
             # ffmpeg -i "concat:{f1}|{f2}|{f3}|{f4}"  -acodec copy {filename}.txt
-            print("-")
+
 
 
 def main():
@@ -285,7 +285,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
