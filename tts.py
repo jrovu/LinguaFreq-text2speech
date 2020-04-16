@@ -248,7 +248,35 @@ def tts_from_csv(input_file):
 
             print(filename_0)
 
-            ffmpeg_cmd = "ffmpeg \
+            # Combine the individual speech files into lessons based on templates
+
+            # Template 1: FW - pause - EW - pause
+            ffmpeg_cmd_1 = "ffmpeg \
+             -f lavfi -i anullsrc \
+             -i \"{f0}\" \
+             -i \"{f1}\" \
+             -filter_complex \"\
+             [0]atrim=duration=1[pause1];\
+             [0]atrim=duration=0.5[pause2];\
+             [1][pause1][2][pause2]concat=n=4:v=0:a=1\" \
+             \"{output_dir}Combined/T1 - {row_count} {p1} - {p2}.mp3\"".format(f0=filename_0, f1=filename_1, p1=row[0], p2=row[1], output_dir=output_dir,
+                row_count=row_count)
+
+            # Template 1: EW - pause - FW - pause
+            ffmpeg_cmd_2 = "ffmpeg \
+             -f lavfi -i anullsrc \
+             -i \"{f0}\" \
+             -i \"{f1}\" \
+             -filter_complex \"\
+             [0]atrim=duration=1[pause1];\
+             [0]atrim=duration=0.5[pause2];\
+             [2][pause1][1][pause2]concat=n=4:v=0:a=1\" \
+             \"{output_dir}Combined/T2 - {row_count} {p1} - {p2}.mp3\"".format(f0=filename_0, f1=filename_1, p1=row[0], p2=row[1], output_dir=output_dir,
+                row_count=row_count)
+
+
+            # Template 3: FW - pause - EW - pause - FP - pause - EP
+            ffmpeg_cmd_3 = "ffmpeg \
              -f lavfi -i anullsrc \
              -i \"{f0}\" \
              -i \"{f1}\" \
@@ -258,15 +286,40 @@ def tts_from_csv(input_file):
              [0]atrim=duration=1[pause1];\
              [0]atrim=duration=1[pause2];\
              [0]atrim=duration=4[pause3];\
-             [1][pause1][2][pause2][3][pause3][4]concat=n=7:v=0:a=1\" \
-             \"{output_dir}Combined/{row_count} {p1} - {p2}.mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir,
+            [0]atrim=duration=0.5[pause4];\
+             [1][pause1][2][pause2][3][pause3][4][pause4]concat=n=8:v=0:a=1\" \
+             \"{output_dir}Combined/T3 - {row_count} {p1} - {p2}.mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir,
                 row_count=row_count)
 
-            print(filename_0)
+            # Template 4
+            ffmpeg_cmd_4 = "ffmpeg \
+             -f lavfi -i anullsrc \
+             -i \"{f0}\" \
+             -i \"{f1}\" \
+             -i \"{f2}\" \
+             -i \"{f3}\" \
+             -filter_complex \"\
+             [0]atrim=duration=1[pause1];\
+             [0]atrim=duration=1[pause2];\
+             [0]atrim=duration=4[pause3];\
+            [0]atrim=duration=0.5[pause4];\
+             [2][pause1][1][pause2][4][pause3][3][pause4]concat=n=8:v=0:a=1\" \
+             \"{output_dir}Combined/T4 - {row_count} {p2} - {p1}.mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir,
+                row_count=row_count)
+
+            logging.debug(ffmpeg_cmd_1)
+            os.system(ffmpeg_cmd_1)
+
+            logging.debug(ffmpeg_cmd_2)
+            os.system(ffmpeg_cmd_2)
+
+            logging.debug(ffmpeg_cmd_3)
+            os.system(ffmpeg_cmd_3)
+
+            logging.debug(ffmpeg_cmd_4)
+            os.system(ffmpeg_cmd_4)
 
             row_count += 1
-            logging.debug(ffmpeg_cmd)
-            os.system(ffmpeg_cmd)
 
 
 
