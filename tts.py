@@ -246,18 +246,27 @@ def tts_from_csv(input_file):
             filename_3 = output_dir + voice2_id + " - " + row[3] + ".mp3"
             create_audio_from_ssml(voice2_id, ssml_text, filename_3)
 
-            # https://superuser.com/questions/314239/how-to-join-merge-many-mp3-files
-            # output_file = concat_phrase_clips(phrase_clip_filenames)
+            print(filename_0)
 
-            ffmpeg_cmd = "ffmpeg -i \"concat:{f0}|{f1}|{f2}|{f3}\" -acodec copy \"{output_dir}Combined/{row_count} {p1} - {p2}.mp3\"".format(
-                f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir,
+            ffmpeg_cmd = "ffmpeg \
+             -f lavfi -i anullsrc \
+             -i \"{f0}\" \
+             -i \"{f1}\" \
+             -i \"{f2}\" \
+             -i \"{f3}\" \
+             -filter_complex \"\
+             [0]atrim=duration=1[pause1];\
+             [0]atrim=duration=1[pause2];\
+             [0]atrim=duration=4[pause3];\
+             [1][pause1][2][pause2][3][pause3][4]concat=n=7:v=0:a=1\" \
+             \"{output_dir}Combined/{row_count} {p1} - {p2}.mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir,
                 row_count=row_count)
+
+            print(filename_0)
 
             row_count += 1
             logging.debug(ffmpeg_cmd)
             os.system(ffmpeg_cmd)
-
-            # ffmpeg -i "concat:{f1}|{f2}|{f3}|{f4}"  -acodec copy {filename}.txt
 
 
 

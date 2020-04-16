@@ -36,3 +36,7 @@ ffmpeg \
 
 
  # W1 <1 sec> W2 <1 sec> P1 <4 sec> P2
+
+
+
+ ./tts.py -m csv -f example_spanish.csv -v1 Lupe -v2 Joanna -v
