@@ -18,6 +18,26 @@
 # This script uses AWS Polly (text-to-speech engine), to create individual MP3 files from lines of text in a file
 
 
+# INFORMATION
+# -------------------------------
+
+# Polly Console: https://console.aws.amazon.com/polly/home/SynthesizeSpeech
+# Polly Voice ID list: https://docs.aws.amazon.com/polly/latest/dg/voicelist.html
+# - Chinese: "Zhiyu"
+# - Spanish: "Lupe"
+
+# POLLY EXAMPLE
+# aws polly synthesize-speech \
+#    --output-format mp3 \
+#    --voice-id Joanna \
+#    --text 'Hello, my name is Joanna. I learned about the W3C on 10/3 of last year.' \
+#    hello.mp3
+
+# CHANGE VOICE SPEED EXAMPLE
+# --text-type ssml
+# --text "<speak><prosody rate='50%'>这个人好是好，就是不适合</prosody></speak>"
+
+
 # PREREQUISITES:
 # -----------------------------
 # - AWS account (https://aws.amazon.com/)
@@ -128,6 +148,7 @@ def create_output_directories():
 
 
 # AWS POLLY call:
+# DEPRECATE?
 # - Take line of text, and creates a text-to-speed audio file
 def generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename):
     # Build out command to call AWS Polly to generate speech files
@@ -152,6 +173,7 @@ def generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename):
 
 
 # Mode: SIMPLETEXT
+# DEPRECATE?
 # - For "Textfile mode" (input from a simple TXT)
 def tts_from_textfile(input_file):
     # Loop through the lines of text in a file
@@ -239,30 +261,6 @@ def tts_from_csv(input_file):
             print("-")
 
 
-# SSML Template: 2 phrase
-# Creates SSML-formatted text based on a phrase, a pause, then its translation
-def create_2phrase_ssml(language_1, phrase_1, language_2, phrase_2):
-    ssml_text = '''
-        <speak>
-            <prosody rate='{voice_speed}%'> 
-                <lang xml:lang='{language_1}'>{phrase_1}</lang>
-            </prosody>
-            <break time='1.5s'/>
-            <lang xml:lang='{language_2}'>{phrase_2}</lang>
-            <break time='{padding}s'/>
-        </speak>
-        '''.format(
-        voice_speed=voice_speed,
-        language_1=language_1,
-        phrase_1=phrase_1,
-        language_2=language_2,
-        phrase_2=phrase_2,
-        padding=padding)
-    # TODO: Use format/replace better
-
-    return ssml_text
-
-
 def main():
     print("-----------------")
     print("Text-to-speech using AWS Polly")
@@ -288,44 +286,6 @@ def main():
 if __name__ == "__main__":
     main()
 
-# -------------------------------
-#       Information
-# -------------------------------
 
 
-# Polly Console: https://console.aws.amazon.com/polly/home/SynthesizeSpeech
-# Polly Voice ID list: https://docs.aws.amazon.com/polly/latest/dg/voicelist.html
-# - Chinese: "Zhiyu"
-# - Spanish: "Lupe"
 
-# POLLY EXAMPLE
-# aws polly synthesize-speech \
-#    --output-format mp3 \
-#    --voice-id Joanna \
-#    --text 'Hello, my name is Joanna. I learned about the W3C on 10/3 of last year.' \
-#    hello.mp3
-
-# CHANGE VOICE SPEED EXAMPLE
-# --text-type ssml
-# --text "<speak><prosody rate='50%'>这个人好是好，就是不适合</prosody></speak>"
-
-
-# -------------------------------
-#       Wishlist / TODO
-# -------------------------------
-# [X] 2nd language should be "good" english
-# [_] Say at fast speed, then repeat at slow speed
-# [_] Add padding equal to length of clip
-# [_] Background sounds eg coffee shop
-# [_] Performance: Async calls?
-
-
-# DONE
-# [X] Control naming ( lang1, lang2)
-# [X] "This should make the directories from scratch"
-# [X] Adjustable voice speed 
-# [X] Add timer
-# [X] <language 1> pause <language 2 / translation>
-# [X] Wipe output folder each run
-# [X] "I should be able to specify a text file from the command line"
-# [X] Adjustable speed in CLI
