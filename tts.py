@@ -132,6 +132,8 @@ template_1_dir = "FW-EW/"
 template_2_dir = "EW-FW/"
 template_3_dir = "FW-EW-FP-EP/"
 template_4_dir = "EW-FW-EP-FP/"
+template_5_dir = "EP/"
+template_6_dir = "FP/"
 
 # LOGGING
 # - Configure & enable logging when --verbose 
@@ -154,6 +156,8 @@ def create_output_directories():
     os.mkdir(output_dir + template_2_dir)
     os.mkdir(output_dir + template_3_dir)
     os.mkdir(output_dir + template_4_dir)
+    os.mkdir(output_dir + template_5_dir)
+    os.mkdir(output_dir + template_6_dir)
     print("Created output directory: %s" % output_dir)
 
 
@@ -260,6 +264,9 @@ def tts_from_csv(input_file):
 
             # Combine the individual speech files into lessons based on templates
 
+            # Reference:
+            # https://ffmpeg.org/ffmpeg-filters.html#Filtergraph-syntax-1
+
             # Template 1: FW - pause - EW - pause
             ffmpeg_cmd_1 = "ffmpeg \
              -f lavfi -i anullsrc \
@@ -301,7 +308,7 @@ def tts_from_csv(input_file):
              \"{output_dir}{template_dir}{row_count} - {p1} - {p2} (T3).mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_3_dir,
                 row_count=row_count)
 
-            # Template 4
+            # Template 4: "EW-FW-EP-FP/"
             ffmpeg_cmd_4 = "ffmpeg \
              -f lavfi -i anullsrc \
              -i \"{f0}\" \
@@ -317,6 +324,32 @@ def tts_from_csv(input_file):
              \"{output_dir}{template_dir}{row_count} - {p2} - {p1} (T4).mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_4_dir,
                 row_count=row_count)
 
+            # Template 5: "EP/"
+            ffmpeg_cmd_5 = "ffmpeg \
+             -f lavfi -i anullsrc \
+             -i \"{f3}\" \
+             -filter_complex \"\
+             [0]atrim=duration=1[pause1];\
+             [1][pause1]concat=n=2:v=0:a=1\" \
+             \"{output_dir}{template_dir}{row_count} {p2} (T5).mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[1], p2=row[3], output_dir=output_dir, template_dir=template_5_dir,
+                row_count=row_count)
+
+
+
+            # Template 6: "FP/"
+            ffmpeg_cmd_6 = "ffmpeg \
+             -f lavfi -i anullsrc \
+             -i \"{f2}\" \
+             -filter_complex \"\
+             [0]atrim=duration=1[pause1];\
+             [1][pause1]concat=n=2:v=0:a=1\" \
+             \"{output_dir}{template_dir}{row_count} {p1} (T6).mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[2], output_dir=output_dir, template_dir=template_6_dir,
+                row_count=row_count)
+
+
+
+
+            # Run the FFMPEG commands
             logging.debug(ffmpeg_cmd_1)
             os.system(ffmpeg_cmd_1)
 
@@ -328,6 +361,12 @@ def tts_from_csv(input_file):
 
             logging.debug(ffmpeg_cmd_4)
             os.system(ffmpeg_cmd_4)
+
+            logging.debug(ffmpeg_cmd_5)
+            os.system(ffmpeg_cmd_5)
+
+            logging.debug(ffmpeg_cmd_6)
+            os.system(ffmpeg_cmd_6)
 
             row_count += 1
 
