@@ -127,6 +127,12 @@ voice2_id = args.voice2
 padding = args.padding
 voice_speed = args.speed
 
+
+template_1_dir = "FW-EW/"
+template_2_dir = "EW-FW/"
+template_3_dir = "FW-EW-FP-EP/"
+template_4_dir = "EW-FW-EP-FP/"
+
 # LOGGING
 # - Configure & enable logging when --verbose 
 if args.verbose:
@@ -143,8 +149,12 @@ def create_output_directories():
 
     # Create directories for output
     os.mkdir(output_dir)
-    os.mkdir(output_dir + "Combined")
-    print("Created directory: %s" % output_dir)
+
+    os.mkdir(output_dir + template_1_dir)
+    os.mkdir(output_dir + template_2_dir)
+    os.mkdir(output_dir + template_3_dir)
+    os.mkdir(output_dir + template_4_dir)
+    print("Created output directory: %s" % output_dir)
 
 
 # AWS POLLY call:
@@ -259,7 +269,7 @@ def tts_from_csv(input_file):
              [0]atrim=duration=1[pause1];\
              [0]atrim=duration=0.5[pause2];\
              [1][pause1][2][pause2]concat=n=4:v=0:a=1\" \
-             \"{output_dir}Combined/T1 - {row_count} {p1} - {p2}.mp3\"".format(f0=filename_0, f1=filename_1, p1=row[0], p2=row[1], output_dir=output_dir,
+             \"{output_dir}{template_dir}{row_count} {p1} - {p2}.mp3\"".format(f0=filename_0, f1=filename_1, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_1_dir,
                 row_count=row_count)
 
             # Template 1: EW - pause - FW - pause
@@ -271,7 +281,7 @@ def tts_from_csv(input_file):
              [0]atrim=duration=1[pause1];\
              [0]atrim=duration=0.5[pause2];\
              [2][pause1][1][pause2]concat=n=4:v=0:a=1\" \
-             \"{output_dir}Combined/T2 - {row_count} {p1} - {p2}.mp3\"".format(f0=filename_0, f1=filename_1, p1=row[0], p2=row[1], output_dir=output_dir,
+             \"{output_dir}{template_dir}{row_count} {p1} - {p2}.mp3\"".format(f0=filename_0, f1=filename_1, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_2_dir,
                 row_count=row_count)
 
 
@@ -288,7 +298,7 @@ def tts_from_csv(input_file):
              [0]atrim=duration=4[pause3];\
             [0]atrim=duration=0.5[pause4];\
              [1][pause1][2][pause2][3][pause3][4][pause4]concat=n=8:v=0:a=1\" \
-             \"{output_dir}Combined/T3 - {row_count} {p1} - {p2}.mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir,
+             \"{output_dir}{template_dir}{row_count} {p1} - {p2}.mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_3_dir,
                 row_count=row_count)
 
             # Template 4
@@ -304,7 +314,7 @@ def tts_from_csv(input_file):
              [0]atrim=duration=4[pause3];\
             [0]atrim=duration=0.5[pause4];\
              [2][pause1][1][pause2][4][pause3][3][pause4]concat=n=8:v=0:a=1\" \
-             \"{output_dir}Combined/T4 - {row_count} {p2} - {p1}.mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir,
+             \"{output_dir}{template_dir}{row_count} {p2} - {p1}.mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_4_dir,
                 row_count=row_count)
 
             logging.debug(ffmpeg_cmd_1)
