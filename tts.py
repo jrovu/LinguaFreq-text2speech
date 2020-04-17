@@ -298,9 +298,10 @@ def tts_from_csv(input_file):
              -i \"{f0}\" \
              -i \"{f1}\" \
              -filter_complex \"\
-             [0]atrim=duration=1[pause1];\
-             [0]atrim=duration=0.5[pause2];\
-             [1][pause1][2][pause2]concat=n=4:v=0:a=1\" \
+             [0]atrim=duration=0.5[pause1];\
+             [0]atrim=duration=1[pause2];\
+             [0]atrim=duration=0.5[pause3];\
+             [pause1][1][pause2][2][pause3]concat=n=5:v=0:a=1\" \
              \"{output_dir}{template_dir}{row_count} - {p1} - {p2}.mp3\"".format(f0=filename_0, f1=filename_1, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_1_dir,
                 row_count=row_count)
 
@@ -310,9 +311,10 @@ def tts_from_csv(input_file):
              -i \"{f0}\" \
              -i \"{f1}\" \
              -filter_complex \"\
-             [0]atrim=duration=1[pause1];\
-             [0]atrim=duration=0.5[pause2];\
-             [2][pause1][1][pause2]concat=n=4:v=0:a=1\" \
+             [0]atrim=duration=0.5[pause1];\
+             [0]atrim=duration=1[pause2];\
+             [0]atrim=duration=0.5[pause3];\
+             [pause1][2][pause2][1][pause3]concat=n=5:v=0:a=1\" \
              \"{output_dir}{template_dir}{row_count} - {p2} - {p1}.mp3\"".format(f0=filename_0, f1=filename_1, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_2_dir,
                 row_count=row_count)
 
@@ -325,11 +327,12 @@ def tts_from_csv(input_file):
              -i \"{f2}\" \
              -i \"{f3}\" \
              -filter_complex \"\
-             [0]atrim=duration=1[pause1];\
+             [0]atrim=duration=0.5[pause1];\
              [0]atrim=duration=1[pause2];\
-             [0]atrim=duration=4[pause3];\
-            [0]atrim=duration=0.5[pause4];\
-             [1][pause1][2][pause2][3][pause3][4][pause4]concat=n=8:v=0:a=1\" \
+             [0]atrim=duration=1[pause3];\
+             [0]atrim=duration=4[pause4];\
+             [0]atrim=duration=0.5[pause5];\
+             [pause1][1][pause2][2][pause3][3][pause4][4][pause5]concat=n=9:v=0:a=1\" \
              \"{output_dir}{template_dir}{row_count} - {p1} - {p2} - {p3}.mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_3_dir,
                 row_count=row_count)
 
@@ -341,11 +344,12 @@ def tts_from_csv(input_file):
              -i \"{f2}\" \
              -i \"{f3}\" \
              -filter_complex \"\
-             [0]atrim=duration=1[pause1];\
+             [0]atrim=duration=0.5[pause1];\
              [0]atrim=duration=1[pause2];\
-             [0]atrim=duration=4[pause3];\
-            [0]atrim=duration=0.5[pause4];\
-             [2][pause1][1][pause2][4][pause3][3][pause4]concat=n=8:v=0:a=1\" \
+             [0]atrim=duration=1[pause3];\
+             [0]atrim=duration=4[pause4];\
+             [0]atrim=duration=0.5[pause5];\
+             [pause1][2][pause2][1][pause3][4][pause4][3][pause5]concat=n=9:v=0:a=1\" \
              \"{output_dir}{template_dir}{row_count} - {p2} - {p1} - {p3}.mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_4_dir,
                 row_count=row_count)
 
@@ -354,8 +358,9 @@ def tts_from_csv(input_file):
              -f lavfi -i anullsrc \
              -i \"{f3}\" \
              -filter_complex \"\
-             [0]atrim=duration=1[pause1];\
-             [1][pause1]concat=n=2:v=0:a=1\" \
+             [0]atrim=duration=0.5[pause1];\
+             [0]atrim=duration=1[pause2];\
+             [pause1][1][pause2]concat=n=3:v=0:a=1\" \
              \"{output_dir}{template_dir}{row_count} - {p2}.mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[1], p2=row[3], output_dir=output_dir, template_dir=template_5_dir,
                 row_count=row_count)
 
@@ -367,7 +372,8 @@ def tts_from_csv(input_file):
              -i \"{f2}\" \
              -filter_complex \"\
              [0]atrim=duration=1[pause1];\
-             [1][pause1]concat=n=2:v=0:a=1\" \
+             [0]atrim=duration=1[pause2];\
+             [pause1][1][pause2]concat=n=3:v=0:a=1\" \
              \"{output_dir}{template_dir}{row_count} - {p1}.mp3\"".format(f0=filename_0, f1=filename_1, f2=filename_2, f3=filename_3, p1=row[2], output_dir=output_dir, template_dir=template_6_dir,
                 row_count=row_count)
 
