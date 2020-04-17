@@ -146,20 +146,21 @@ voice_speed = args.speed
 voice1_engine = args.voice1_engine
 voice2_engine = args.voice2_engine
 
-
+# TODO: Dicts? some other structure?
 template_1_dir = "FW-EW/"
 template_2_dir = "EW-FW/"
 template_3_dir = "FW-EW-FP-EP/"
 template_4_dir = "EW-FW-EP-FP/"
 template_5_dir = "EP/"
 template_6_dir = "FP/"
+workspace_dir = "_Workspace/"
 
 # LOGGING
 # - Configure & enable logging when --verbose 
 if args.verbose:
     logging.basicConfig(level=logging.DEBUG)
 
-logging.debug('Verbose / Debug mode enabled')
+logging.debug('Verbose mode enabled')
 
 
 # Deletes & creates output directory for MP3s
@@ -177,11 +178,14 @@ def create_output_directories():
     os.mkdir(output_dir + template_4_dir)
     os.mkdir(output_dir + template_5_dir)
     os.mkdir(output_dir + template_6_dir)
+    os.mkdir(output_dir + workspace_dir)
     print("Created output directory: %s" % output_dir)
 
 
 
 def create_audio_from_ssml(voice_id, engine, ssml_text, filename):
+    logging.debug("-------------")
+    logging.debug("AWS Polly call")
     logging.debug("Voice ID: " + voice_id)
     logging.debug("SSML: " + ssml_text)
     logging.debug("Filename: " + filename)
@@ -202,14 +206,13 @@ def create_audio_from_ssml(voice_id, engine, ssml_text, filename):
                output_dir=output_dir,
                filename=filename)
 
-    logging.debug("Polly CMD: " + polly_cmd)  # Debug
+    logging.debug("Polly CMD: " + polly_cmd)
     os.system(polly_cmd)
 
 
 # Mode: CSV
 # - Read from a 2-column CSV file
 def tts_from_csv(input_file):
-    phrase_clip_file = []
 
     row_count = 1
     with open(input_file) as cvs_file:
@@ -219,25 +222,25 @@ def tts_from_csv(input_file):
             # FW - Foreign Word
             ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[0])
-            filename_0 = output_dir + voice1_id + " - " + row[0] + ".pcm"
+            filename_0 = output_dir + workspace_dir + voice1_id + " - " + row[0] + ".pcm"
             create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, filename_0)
 
             # EW - English Word
             ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[1])
-            filename_1 = output_dir + voice2_id + " - " + row[1] + ".pcm"
+            filename_1 = output_dir + workspace_dir + voice2_id + " - " + row[1] + ".pcm"
             create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, filename_1)
 
             # FP - Foreign Phrase
             ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[2])
-            filename_2 = output_dir + voice1_id + " - " + row[2] + ".pcm"
+            filename_2 = output_dir + workspace_dir + voice1_id + " - " + row[2] + ".pcm"
             create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, filename_2)
 
             # EP - English Phrase
             ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[3])
-            filename_3 = output_dir + voice2_id + " - " + row[3] + ".pcm"
+            filename_3 = output_dir + workspace_dir + voice2_id + " - " + row[3] + ".pcm"
             create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, filename_3)
 
 
@@ -356,22 +359,26 @@ def tts_from_csv(input_file):
             row_count += 1
 
 
+def create_silent_audio_files():
+    logging.debug("Creating silent audio files")
+
+
 
 def main():
     print("-----------------")
     print("Text-to-speech using AWS Polly")
     start_time = datetime.now()  # Timer
 
+    # Setup
     create_output_directories()
 
     print(mode)
 
-    if mode == "csv":
-        print("Mode: CSV file")
-        tts_from_csv(input_file)
-    elif mode == "simpletext":
-        print("Mode: Simple text file")
-        tts_from_textfile(input_file)
+    create_silent_audio_files();
+
+
+    tts_from_csv(input_file)
+
 
     # Timer
     completion_time = datetime.now() - start_time
