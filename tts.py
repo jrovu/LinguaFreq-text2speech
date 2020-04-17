@@ -184,8 +184,7 @@ def create_output_directories():
 
 
 def create_audio_from_ssml(voice_id, engine, ssml_text, filename):
-    logging.debug("-------------")
-    logging.debug("AWS Polly call")
+    logging.debug("-------AWS Polly call------")
     logging.debug("Voice ID: " + voice_id)
     logging.debug("SSML: " + ssml_text)
     logging.debug("Filename: " + filename)
@@ -208,6 +207,8 @@ def create_audio_from_ssml(voice_id, engine, ssml_text, filename):
 
     logging.debug("Polly CMD: " + polly_cmd)
     os.system(polly_cmd)
+    logging.debug(" ")
+    logging.debug(" ")
 
 
 # Mode: CSV
@@ -359,10 +360,24 @@ def tts_from_csv(input_file):
             row_count += 1
 
 
-def create_silent_audio_files():
-    logging.debug("Creating silent audio files")
+def create_silent_audio_file(seconds):
+    logging.debug("----Creating silent audio files----")
 
+    filename = output_dir + workspace_dir + "silence_{seconds}s.wav".format(seconds=seconds)
 
+    cmd = '''
+    ffmpeg \
+    -f lavfi \
+    -i anullsrc=channel_layout=mono:sample_rate=16000 \
+    -t {seconds} \
+    \"{filename}\"
+    '''.format(seconds=seconds, filename=filename)
+
+    logging.debug("ffmpeg command:")
+    logging.debug(cmd)
+    os.system(cmd)
+    logging.debug(" ")
+    logging.debug(" ")
 
 def main():
     print("-----------------")
@@ -374,7 +389,9 @@ def main():
 
     print(mode)
 
-    create_silent_audio_files();
+    create_silent_audio_file(0.5)
+    create_silent_audio_file(1)
+    create_silent_audio_file(4)
 
 
     tts_from_csv(input_file)
