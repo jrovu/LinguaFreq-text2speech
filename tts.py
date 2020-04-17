@@ -180,53 +180,6 @@ def create_output_directories():
     print("Created output directory: %s" % output_dir)
 
 
-# AWS POLLY call:
-# DEPRECATE?
-# - Take line of text, and creates a text-to-speed audio file
-def generate_text_to_speech_file(voice_id, ssml_text, output_dir, filename):
-    # Build out command to call AWS Polly to generate speech files
-    polly_cmd = '''
-        aws polly synthesize-speech \
-       --output-format mp3 \
-       --text-type ssml \
-       --voice-id {voice_id} \
-       --text "{ssml_text}" \
-       "{output_dir}{filename}"
-    '''.format(voice_id=voice_id,
-               ssml_text=ssml_text,
-               output_dir=output_dir,
-               filename=filename)
-
-    logging.debug(polly_cmd)  # Debug
-
-    # TODO: Update this to use Popen?
-    os.system(polly_cmd)
-    # TODO: Trap aws CLI call output:
-    #  https://stackoverflow.com/questions/3503879/assign-output-of-os-system-to-a-variable-and-prevent-it-from-being-displayed-on
-
-
-# Mode: SIMPLETEXT
-# DEPRECATE?
-# - For "Textfile mode" (input from a simple TXT)
-def tts_from_textfile(input_file):
-    # Loop through the lines of text in a file
-    with open(input_file, "r") as file:
-        print("Opened file: " + input_file)
-
-        for line in file:
-            # Strip newlines from the lines, else they appear in filenames
-            stripped_line = line.strip()
-            filename = stripped_line + ".mp3"
-
-            print("-----------------")
-            print("Processing: " + stripped_line)
-            print("-----------------")
-
-            ssml_text = "<speak><prosody rate='{voice_speed}%'>{stripped_line}</prosody><break time='{padding}s'/></speak>".format(
-                voice_speed=voice_speed, stripped_line=stripped_line, padding=padding)
-            generate_text_to_speech_file(voice1_id, ssml_text, output_dir, filename)
-            # TODO: Use format/replace better
-
 
 def create_audio_from_ssml(voice_id, engine, ssml_text, filename):
     logging.debug("Voice ID: " + voice_id)
@@ -236,7 +189,8 @@ def create_audio_from_ssml(voice_id, engine, ssml_text, filename):
     # Build out command to call AWS Polly to generate speech files
     polly_cmd = '''
         aws polly synthesize-speech \
-       --output-format mp3 \
+       --output-format pcm \
+       --sample-rate 16000 \
        --text-type ssml \
        --voice-id {voice_id} \
        --engine {engine} \
@@ -265,25 +219,25 @@ def tts_from_csv(input_file):
             # FW - Foreign Word
             ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[0])
-            filename_0 = output_dir + voice1_id + " - " + row[0] + ".mp3"
+            filename_0 = output_dir + voice1_id + " - " + row[0] + ".pcm"
             create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, filename_0)
 
             # EW - English Word
             ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[1])
-            filename_1 = output_dir + voice2_id + " - " + row[1] + ".mp3"
+            filename_1 = output_dir + voice2_id + " - " + row[1] + ".pcm"
             create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, filename_1)
 
             # FP - Foreign Phrase
             ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[2])
-            filename_2 = output_dir + voice1_id + " - " + row[2] + ".mp3"
+            filename_2 = output_dir + voice1_id + " - " + row[2] + ".pcm"
             create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, filename_2)
 
             # EP - English Phrase
             ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[3])
-            filename_3 = output_dir + voice2_id + " - " + row[3] + ".mp3"
+            filename_3 = output_dir + voice2_id + " - " + row[3] + ".pcm"
             create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, filename_3)
 
 
@@ -294,7 +248,7 @@ def tts_from_csv(input_file):
 
             # Template 1: "FW - pause - EW - pause"
             ffmpeg_cmd_1 = "ffmpeg \
-             -f lavfi -i anullsrc \
+             -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
              -i \"{f0}\" \
              -i \"{f1}\" \
              -filter_complex \"\
@@ -307,7 +261,7 @@ def tts_from_csv(input_file):
 
             # Template 1: EW - pause - FW - pause
             ffmpeg_cmd_2 = "ffmpeg \
-             -f lavfi -i anullsrc \
+             -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
              -i \"{f0}\" \
              -i \"{f1}\" \
              -filter_complex \"\
@@ -321,7 +275,7 @@ def tts_from_csv(input_file):
 
             # Template 3: FW - pause - EW - pause - FP - pause - EP
             ffmpeg_cmd_3 = "ffmpeg \
-             -f lavfi -i anullsrc \
+             -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
              -i \"{f0}\" \
              -i \"{f1}\" \
              -i \"{f2}\" \
@@ -338,7 +292,7 @@ def tts_from_csv(input_file):
 
             # Template 4: "EW-FW-EP-FP/"
             ffmpeg_cmd_4 = "ffmpeg \
-             -f lavfi -i anullsrc \
+             -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
              -i \"{f0}\" \
              -i \"{f1}\" \
              -i \"{f2}\" \
@@ -355,7 +309,7 @@ def tts_from_csv(input_file):
 
             # Template 5: "EP/"
             ffmpeg_cmd_5 = "ffmpeg \
-             -f lavfi -i anullsrc \
+             -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
              -i \"{f3}\" \
              -filter_complex \"\
              [0]atrim=duration=0.5[pause1];\
@@ -368,7 +322,7 @@ def tts_from_csv(input_file):
 
             # Template 6: "FP/"
             ffmpeg_cmd_6 = "ffmpeg \
-             -f lavfi -i anullsrc \
+             -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
              -i \"{f2}\" \
              -filter_complex \"\
              [0]atrim=duration=1[pause1];\

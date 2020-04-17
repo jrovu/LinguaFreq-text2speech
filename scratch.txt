@@ -40,3 +40,151 @@ ffmpeg \
 
 
  ./tts.py -m csv -f example_spanish.csv -v1 Lupe -v2 Joanna -v
+
+
+ffmpeg \
+-f lavfi -i anullsrc \
+-i "test/in-good.mp3" \
+-filter_complex "\
+[0]aformat=sample_rates=44100,atrim=duration=0.5[pause1];\
+[0]aformat=sample_rates=44100,atrim=duration=0.5[pause2];\
+[pause1][1][pause2]concat=n=3:v=0:a=1" \
+-y \
+"test/out-TEST.mp3"
+
+
+# Inspect
+ffprobe -i "_TTS-Output/Joanna - baseball.mp3"
+
+
+# Bad call
+ffmpeg \
+-f lavfi -i anullsrc \
+-i "test/in-good.mp3" \
+-filter_complex "\
+[0]atrim=duration=0.5[pause1];\
+[0]atrim=duration=1[pause2];\
+[pause1][1][pause2]concat=n=3:v=0:a=1" \
+"test/out-TEST1.mp3"
+
+
+# Good call
+ffmpeg \
+-f lavfi -i anullsrc \
+-i "test/in-good.mp3" \
+-filter_complex "\
+[0]atrim=duration=1[pause1];\
+[1][pause1]concat=n=2:v=0:a=1" \
+"test/out-TEST2.mp3"
+
+# HOw to add silence using concat demuxer (no re-encode)
+https://superuser.com/questions/579008/add-1-second-of-silence-to-audio-through-ffmpeg
+
+# TEsting out a fix
+ffmpeg -y \
+-f lavfi -i anullsrc=channel_layout=mono:sample_rate=22050 \
+-i "test/in-good.mp3" \
+-filter_complex "\
+[0]atrim=duration=0.5[pause1];\
+[0]atrim=duration=1[pause2];\
+[pause1][1][pause2]concat=n=3:v=0:a=1" \
+"test/out-TEST3.mp3"
+
+ffprobe -i "test/in-good.mp3"
+#Input #0, mp3, from 'test/in-good.mp3':
+#  Metadata:
+#    encoder         : Lavf57.71.100
+#  Duration: 00:00:01.20, start: 0.000000, bitrate: 48 kb/s
+#    Stream #0:0: Audio: mp3, 22050 Hz, mono, fltp, 48 kb/s
+
+ffprobe -i "test/out-good.mp3"
+#Input #0, mp3, from 'test/out-good.mp3':
+#  Metadata:
+#    encoder         : Lavf58.29.100
+#  Duration: 00:00:02.27, start: 0.050113, bitrate: 32 kb/s
+#    Stream #0:0: Audio: mp3, 22050 Hz, mono, fltp, 32 kb/s
+
+
+ffprobe -i "test/out-bad.mp3"
+Input #0, mp3, from 'test/out-bad.mp3':
+#  Metadata:
+#    encoder         : Lavf58.29.100
+#  Duration: 00:00:02.74, start: 0.025057, bitrate: 128 kb/s
+#    Stream #0:0: Audio: mp3, 44100 Hz, stereo, fltp, 128 kb/s
+#    Metadata:
+#      encoder         : Lavc58.54
+
+ffprobe -i "test/in-chinese-good.mp3"
+#Input #0, mp3, from 'test/in-chinese-good.mp3':
+#  Metadata:
+#    encoder         : Lavf57.71.100
+#  Duration: 00:00:01.12, start: 0.000000, bitrate: 48 kb/s
+#    Stream #0:0: Audio: mp3, 22050 Hz, mono, fltp, 48 kb/s
+
+
+# Make silent file (0.5s, 1s, 4s)
+ffmpeg \
+-f lavfi -i anullsrc=channel_layout=mono:sample_rate=24000 \
+-t 1 \
+"silence_1.mp3"
+
+ffmpeg \
+-f lavfi -i anullsrc=channel_layout=mono:sample_rate=24000 \
+-t 1 \
+"test/silence_0.5.mp3"
+
+
+ffmpeg -i "concat:silence_0.5-fix.mp3|in-good.mp3|silence_0.5-fix.mp3" \
+-acodec \
+copy \
+"out-demux.mp3"
+
+# Fix
+ffmpeg \
+-i silence_0.5.mp3 \
+-acodec copy \
+silence_0.5-fix.mp3
+
+
+ffmpeg \
+ -i silence_0.5.mp3 \
+ -i in-good.mp3 \
+ -i silence_0.5.mp3 \
+ -filter_complex \
+       "[0][1][2]concat=n=3:v=0:a=1"  \
+ out-test.mp3
+
+
+ ./tts.py -m csv -f example_chinese.csv -v1 Zhiyu -v2 Joanna -v
+
+# Convert PCM to WAV
+# https://stackoverflow.com/questions/11986279/can-ffmpeg-convert-audio-from-raw-pcm-to-wav
+ffmpeg \
+ -f s16le \
+ -ar 16000 \
+ -ac 1 \
+ -i in-pcm.pcm \
+ -y \
+ out-wav.wav
+
+
+ffmpeg \
+-i "concat:"
+
+
+
+# Create a 1 second WAV file
+ffmpeg \
+-f lavfi \
+-i anullsrc=channel_layout=mono:sample_rate=16000 \
+-t 1 \
+"silence_1.wav"
+
+ffmpeg -y -f concat -i concat.txt -c copy out-test.wav
+
+# Create silent clips
+# Call to AWS, make PCM
+# Call to FFMPEG, convert to WAV
+# Create text file, add filenames to it
+# Call to FFMPEG, create full phrase file
+
