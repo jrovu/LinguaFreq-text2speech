@@ -182,9 +182,9 @@ ffmpeg \
 
 ffmpeg -y -f concat -i concat.txt -c copy out-test.wav
 
-# Create silent clips
-# Call to AWS, make PCM
-# Call to FFMPEG, convert to WAV
+# X Create silent clips
+# XCall to AWS, make PCM
+# X Call to FFMPEG, convert to WAV
 # Create text file, add filenames to it
 # Call to FFMPEG, create full phrase file
 

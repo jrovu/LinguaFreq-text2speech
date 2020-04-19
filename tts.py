@@ -218,8 +218,8 @@ def create_audio_from_ssml(voice_id, engine, ssml_text, filename):
         filename
     ]
 
-    process = subprocess.run(cmd, capture_output=True, text=True)
     logging.debug("Polly CMD: \n" + subprocess.list2cmdline(cmd))
+    process = subprocess.run(cmd, capture_output=True, text=True)
     logging.debug("Polly CMD standard output: \n" + process.stdout)
     logging.debug("Polly CMD error output: \n" + process.stderr)
 
@@ -254,10 +254,24 @@ def convert_pcm_to_wav(input_filename):
     return output_filename
 
 
+def concat_audio_files(audio_files, output_filename):
+    logging.debug("\n\n--------[ FFMPEG Concat ]--------")
+    logging.debug("Output filename: " + output_filename)
+    ffmpeg_concat_list_filename = output_filename.replace(".wav", ".txt")
+    logging.debug("FFMPEG Concat list filename:" + ffmpeg_concat_list_filename)
+
+    with open(ffmpeg_concat_list_filename, "w") as concat_list_file:
+        for file in audio_files:
+            concat_list_file.write("file '{file}'\n".format(file=file))
+
+    concat_list_file.close()
+
+    # TODO: Delete list file by default, keep if verbose
+
+    return output_filename
+
 
 def tts_from_csv(input_file):
-
-
 
     silent_short = create_silent_audio_file(0.5)
     silent_medium = create_silent_audio_file(1)
@@ -275,31 +289,72 @@ def tts_from_csv(input_file):
                 voice_speed=voice_speed, text=row[0])
             pcm_filename_0 = output_dir + workspace_dir + voice1_id + " - " + row[0] + ".pcm"
             create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, pcm_filename_0)
-            convert_pcm_to_wav(pcm_filename_0)
+            wav_filename_0 = convert_pcm_to_wav(pcm_filename_0)
+
+
 
             # EW - English Word
             ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[1])
             pcm_filename_1 = output_dir + workspace_dir + voice2_id + " - " + row[1] + ".pcm"
             create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, pcm_filename_1)
-            convert_pcm_to_wav(pcm_filename_1)
+            wav_filename_1 = convert_pcm_to_wav(pcm_filename_1)
 
             # FP - Foreign Phrase
             ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[2])
             pcm_filename_2 = output_dir + workspace_dir + voice1_id + " - " + row[2] + ".pcm"
             create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, pcm_filename_2)
-            convert_pcm_to_wav(pcm_filename_2)
+            wav_filename_2 = convert_pcm_to_wav(pcm_filename_2)
 
             # EP - English Phrase
             ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[3])
             pcm_filename_3 = output_dir + workspace_dir + voice2_id + " - " + row[3] + ".pcm"
             create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, pcm_filename_3)
-            convert_pcm_to_wav(pcm_filename_3)
+            wav_filename_3 = convert_pcm_to_wav(pcm_filename_3)
 
 
             # Combine the individual speech files into lessons based on templates
+
+            concat_list_file_0 = open("ffmpeg_concat_{row}_0_list.txt".format(row=row_count), "a")
+            logging.debug("FFMPEG concat textfile: " + concat_list_file_0.name)
+            concat_list_file_0.write("file '{file}'\n".format(file=silent_short))
+            concat_list_file_0.write("file '{file}'\n".format(file=wav_filename_0))
+            concat_list_file_0.write("file '{file}'\n".format(file=silent_medium))
+            concat_list_file_0.write("file '{file}'\n".format(file=wav_filename_1))
+            concat_list_file_0.write("file '{file}'\n".format(file=silent_short))
+            concat_list_file_0.close()
+
+
+            cmd_0 = [
+                "ffmpeg",
+                "-f", "concat",
+                "-safe", "0",
+                "-i", concat_list_file_0.name,
+                "-c", "copy",
+                output_dir + workspace_dir + "test_{row}.wav".format(row=row_count)
+            ]
+
+            logging.debug("FFMPEG Concat CMD: \n" + subprocess.list2cmdline(cmd_0))
+            process_0 = subprocess.run(cmd_0, capture_output=True, text=True)
+            logging.debug("FFMPEG Concat standard output: \n" + process_0.stdout)
+            logging.debug("FFMPEG Concat error output: \n" + process_0.stderr)
+
+
+
+            audio_files_0 = [
+                silent_short,
+                wav_filename_0,
+                silent_medium,
+                wav_filename_1,
+                silent_short
+            ]
+            concat_wav_filename_0 = "{row} - {w0} - {w1}.wav".format(row=row_count, w0=row[0], w1=row[1])
+            concat_audio_files(audio_files_0, concat_wav_filename_0)
+
+
+
 
             # Reference:
             # https://ffmpeg.org/ffmpeg-filters.html#Filtergraph-syntax-1
@@ -403,24 +458,24 @@ def tts_from_csv(input_file):
 
 
 
-            # Run the FFMPEG commands
-            logging.debug(ffmpeg_cmd_0)
-            os.system(ffmpeg_cmd_0)
-
-            logging.debug(ffmpeg_cmd_1)
-            os.system(ffmpeg_cmd_1)
-
-            logging.debug(ffmpeg_cmd_2)
-            os.system(ffmpeg_cmd_2)
-
-            logging.debug(ffmpeg_cmd_3)
-            os.system(ffmpeg_cmd_3)
-
-            logging.debug(ffmpeg_cmd_4)
-            os.system(ffmpeg_cmd_4)
-
-            logging.debug(ffmpeg_cmd_5)
-            os.system(ffmpeg_cmd_5)
+            # # Run the FFMPEG commands
+            # logging.debug(ffmpeg_cmd_0)
+            # os.system(ffmpeg_cmd_0)
+            #
+            # logging.debug(ffmpeg_cmd_1)
+            # os.system(ffmpeg_cmd_1)
+            #
+            # logging.debug(ffmpeg_cmd_2)
+            # os.system(ffmpeg_cmd_2)
+            #
+            # logging.debug(ffmpeg_cmd_3)
+            # os.system(ffmpeg_cmd_3)
+            #
+            # logging.debug(ffmpeg_cmd_4)
+            # os.system(ffmpeg_cmd_4)
+            #
+            # logging.debug(ffmpeg_cmd_5)
+            # #os.system(ffmpeg_cmd_5)
 
             row_count += 1
 
