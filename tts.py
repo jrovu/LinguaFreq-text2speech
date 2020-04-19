@@ -331,32 +331,37 @@ def tts_from_csv(input_file):
         csv_reader = csv.reader(cvs_file, delimiter=',')
         for row in csv_reader:
 
+            foreign_word = row[0]
+            english_word = row[1]
+            foreign_phrase = row[2]
+            english_phrase = row[3]
+
             # FW - Foreign Word
-            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='0s'/></speak>".format(
-                voice_speed=voice_speed, text=row[0])
-            pcm_filename_0 = output_dir + workspace_dir + voice1_id + " - " + row[0] + ".pcm"
+            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(
+                voice_speed=voice_speed, text=foreign_word)
+            pcm_filename_0 = output_dir + workspace_dir + voice1_id + " - " + foreign_word + ".pcm"
             create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, pcm_filename_0)
             wav_filename_0 = convert_pcm_to_wav(pcm_filename_0)
 
 
             # EW - English Word
             ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
-                voice_speed=voice_speed, text=row[1])
-            pcm_filename_1 = output_dir + workspace_dir + voice2_id + " - " + row[1] + ".pcm"
+                voice_speed=voice_speed, text=english_word)
+            pcm_filename_1 = output_dir + workspace_dir + voice2_id + " - " + english_word + ".pcm"
             create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, pcm_filename_1)
             wav_filename_1 = convert_pcm_to_wav(pcm_filename_1)
 
             # FP - Foreign Phrase
             ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='0s'/></speak>".format(
-                voice_speed=voice_speed, text=row[2])
-            pcm_filename_2 = output_dir + workspace_dir + voice1_id + " - " + row[2] + ".pcm"
+                voice_speed=voice_speed, text=foreign_phrase)
+            pcm_filename_2 = output_dir + workspace_dir + voice1_id + " - " + foreign_phrase + ".pcm"
             create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, pcm_filename_2)
             wav_filename_2 = convert_pcm_to_wav(pcm_filename_2)
 
             # EP - English Phrase
             ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
-                voice_speed=voice_speed, text=row[3])
-            pcm_filename_3 = output_dir + workspace_dir + voice2_id + " - " + row[3] + ".pcm"
+                voice_speed=voice_speed, text=english_phrase)
+            pcm_filename_3 = output_dir + workspace_dir + voice2_id + " - " + english_phrase + ".pcm"
             create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, pcm_filename_3)
             wav_filename_3 = convert_pcm_to_wav(pcm_filename_3)
 
@@ -371,14 +376,12 @@ def tts_from_csv(input_file):
                 wav_filename_1,
                 silent_short
             ]
-            filename_format = "{row} - {w0} - {w1}".format(row=row_count, w0=row[0], w1=row[1])
-            combined_wav_filename = concat_audio_files(audio_files,
-                                                       output_dir + workspace_dir + filename_format + ".wav")
-            combined_mp3_filename = convert_wav_to_mp3(combined_wav_filename,
-                                                       output_dir + template_0_dir + filename_format + ".mp3")
+            filename_format = "{row} - {foreign_word} - {english_word}".format(row=row_count, foreign_word=foreign_word, english_word=english_word)
+            combined_wav_filename = \
+                concat_audio_files(audio_files, output_dir + workspace_dir + filename_format + ".wav")
+            combined_mp3_filename = \
+                convert_wav_to_mp3(combined_wav_filename, output_dir + template_0_dir + filename_format + ".mp3")
             print("► Created: " + combined_mp3_filename)
-
-
 
 
 
