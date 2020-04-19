@@ -73,6 +73,7 @@ import logging
 import os
 import shutil
 from datetime import datetime
+import subprocess
 
 # COMMAND LINE ARGUMENTS
 # Setup Arguments
@@ -207,8 +208,21 @@ def create_audio_from_ssml(voice_id, engine, ssml_text, filename):
                output_dir=output_dir,
                filename=filename)
 
-    logging.debug("Polly CMD: " + polly_cmd)
-    os.system(polly_cmd)
+
+    cmd = [
+        "aws", "polly", "synthesize-speech",
+        "--output-format", "pcm",
+        "--sample-rate", "16000",
+        "--text-type", "ssml",
+        "--voice-id", voice_id,
+        "--engine", engine,
+        "--text", ssml_text,
+        filename
+    ]
+
+    process = subprocess.run(cmd, capture_output=True, text=True)
+    logging.debug("Polly CMD standard output: " + process.stdout)
+    logging.debug("Polly CMD error output: " + process.stderr)
 
 
 
