@@ -266,9 +266,30 @@ def concat_audio_files(audio_files, output_filename):
 
     concat_list_file.close()
 
+    cmd = [
+        "ffmpeg",
+        "-f", "concat",
+        "-safe", "0",
+        "-i", ffmpeg_concat_list_filename,
+        "-c", "copy",
+        output_dir + workspace_dir + output_filename
+    ]
+
+    logging.debug("FFMPEG Concat CMD: \n" + subprocess.list2cmdline(cmd))
+    process = subprocess.run(cmd, capture_output=True, text=True)
+    logging.debug("FFMPEG Concat standard output: \n" + process.stdout)
+    logging.debug("FFMPEG Concat error output: \n" + process.stderr)
+
+
+
+
     # TODO: Delete list file by default, keep if verbose
 
     return output_filename
+
+
+def convert_wav_to_mp3(combined_filename_0, param):
+    pass
 
 
 def tts_from_csv(input_file):
@@ -317,31 +338,6 @@ def tts_from_csv(input_file):
 
             # Combine the individual speech files into lessons based on templates
 
-            concat_list_file_0 = open("ffmpeg_concat_{row}_0_list.txt".format(row=row_count), "a")
-            logging.debug("FFMPEG concat textfile: " + concat_list_file_0.name)
-            concat_list_file_0.write("file '{file}'\n".format(file=silent_short))
-            concat_list_file_0.write("file '{file}'\n".format(file=wav_filename_0))
-            concat_list_file_0.write("file '{file}'\n".format(file=silent_medium))
-            concat_list_file_0.write("file '{file}'\n".format(file=wav_filename_1))
-            concat_list_file_0.write("file '{file}'\n".format(file=silent_short))
-            concat_list_file_0.close()
-
-
-            cmd_0 = [
-                "ffmpeg",
-                "-f", "concat",
-                "-safe", "0",
-                "-i", concat_list_file_0.name,
-                "-c", "copy",
-                output_dir + workspace_dir + "test_{row}.wav".format(row=row_count)
-            ]
-
-            logging.debug("FFMPEG Concat CMD: \n" + subprocess.list2cmdline(cmd_0))
-            process_0 = subprocess.run(cmd_0, capture_output=True, text=True)
-            logging.debug("FFMPEG Concat standard output: \n" + process_0.stdout)
-            logging.debug("FFMPEG Concat error output: \n" + process_0.stderr)
-
-
 
             audio_files_0 = [
                 silent_short,
@@ -350,8 +346,11 @@ def tts_from_csv(input_file):
                 wav_filename_1,
                 silent_short
             ]
-            concat_wav_filename_0 = "{row} - {w0} - {w1}.wav".format(row=row_count, w0=row[0], w1=row[1])
-            concat_audio_files(audio_files_0, concat_wav_filename_0)
+            filename_format = "Combined {row} - {w0} - {w1}".format(row=row_count, w0=row[0], w1=row[1])
+            
+            combined_filename_0 = concat_audio_files(audio_files_0, filename_format + ".wav")
+            convert_wav_to_mp3(combined_filename_0, filename_format + ".mp3")
+
 
 
 
