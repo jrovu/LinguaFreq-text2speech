@@ -185,12 +185,10 @@ def create_output_directories():
 
 
 def create_audio_from_ssml(voice_id, engine, ssml_text, filename):
-    logging.debug(" ")
-    logging.debug(" ")
-    logging.debug("--------[ AWS Polly call ]--------")
+    logging.debug("\n\n-------[ AWS Polly call ]--------")
     logging.debug("Voice ID: " + voice_id)
     logging.debug("SSML: " + ssml_text)
-    logging.debug("Filename: " + filename)
+    logging.debug("Filename: \"" + filename + "\"")
 
     # Build out command to call AWS Polly to generate speech files
     polly_cmd = '''
@@ -221,17 +219,17 @@ def create_audio_from_ssml(voice_id, engine, ssml_text, filename):
     ]
 
     process = subprocess.run(cmd, capture_output=True, text=True)
-    logging.debug("Polly CMD standard output: " + process.stdout)
-    logging.debug("Polly CMD error output: " + process.stderr)
+    logging.debug("Polly CMD: \n" + subprocess.list2cmdline(cmd))
+    logging.debug("Polly CMD standard output: \n" + process.stdout)
+    logging.debug("Polly CMD error output: \n" + process.stderr)
+
 
 
 
 # Mode: CSV
 # - Read from a 2-column CSV file
 def convert_pcm_to_wav(input_filename):
-    logging.debug(" ")
-    logging.debug(" ")
-    logging.debug("--------[ Converting PCM to WAV ]--------")
+    logging.debug("\n\n--------[ Converting PCM to WAV ]--------")
     logging.debug("Input filename: " + input_filename)
 
     output_filename = input_filename.replace(".pcm", ".wav")
@@ -252,6 +250,7 @@ def convert_pcm_to_wav(input_filename):
     logging.debug("ffmpeg cmd:")
     logging.debug(cmd)
     os.system(cmd)
+
     return output_filename
 
 
