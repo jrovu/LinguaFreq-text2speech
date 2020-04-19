@@ -191,22 +191,6 @@ def create_audio_from_ssml(voice_id, engine, ssml_text, filename):
     logging.debug("Filename: \"" + filename + "\"")
 
     # Build out command to call AWS Polly to generate speech files
-    polly_cmd = '''
-        aws polly synthesize-speech \
-       --output-format pcm \
-       --sample-rate 16000 \
-       --text-type ssml \
-       --voice-id {voice_id} \
-       --engine {engine} \
-       --text "{ssml_text}" \
-       "{filename}"
-    '''.format(voice_id=voice_id,
-               engine=engine,
-               ssml_text=ssml_text,
-               output_dir=output_dir,
-               filename=filename)
-
-
     cmd = [
         "aws", "polly", "synthesize-speech",
         "--output-format", "pcm",
@@ -234,18 +218,7 @@ def convert_pcm_to_wav(input_filename):
     output_filename = input_filename.replace(".pcm", ".wav")
     logging.debug("Output filename: " + output_filename)
 
-    # Convert PCM to WAV
-    # https://stackoverflow.com/questions/11986279/can-ffmpeg-convert-audio-from-raw-pcm-to-wav
-    cmd = '''
-    ffmpeg \
-    -f s16le \
-    -ar 16000 \
-    -ac 1 \
-    -i \"{input_filename}\" \
-    -y \
-    \"{output_filename}\"
-    '''.format(input_filename=input_filename, output_filename=output_filename)
-
+    # Build out `ffmpeg` command to convert PCM to WAV
     cmd = [
         "ffmpeg",
         "-f", "s16le",
@@ -269,12 +242,14 @@ def concat_audio_files(audio_files, output_filename):
     ffmpeg_concat_list_filename = output_filename.replace(output_dir + workspace_dir, "").replace(".wav", ".txt")
     logging.debug("FFMPEG Concat list filename:" + ffmpeg_concat_list_filename)
 
+    # Create a text file, and populate it (using `ffmpeg`s concat file format) with list of filenames
     with open(ffmpeg_concat_list_filename, "w") as concat_list_file:
         for file in audio_files:
             concat_list_file.write("file '{file}'\n".format(file=file))
 
     concat_list_file.close()
 
+    # Build out `ffmpeg` command to use the concat text file (containing list of of WAV files) into a single WAV
     cmd = [
         "ffmpeg",
         "-f", "concat",
@@ -289,9 +264,6 @@ def concat_audio_files(audio_files, output_filename):
     logging.debug("FFMPEG Concat standard output: \n" + process.stdout)
     logging.debug("FFMPEG Concat error output: \n" + process.stderr)
 
-
-
-
     # TODO: Delete list file by default, keep if verbose
 
     return output_filename
@@ -302,6 +274,7 @@ def convert_wav_to_mp3(input_filename, output_filename):
     logging.debug("Input filename: " + input_filename)
     logging.debug("Output filename: " + output_filename)
 
+    # Build out `ffmpeg` command to convert a WAV file to and MP3
     cmd = [
         "ffmpeg",
         "-i", input_filename,
@@ -316,17 +289,15 @@ def convert_wav_to_mp3(input_filename, output_filename):
     return output_filename
 
 
-
 def tts_from_csv(input_file):
-
-    logging.debug("Creating silent audio files")
     silent_short = create_silent_audio_file(0.5)
     silent_medium = create_silent_audio_file(1)
     silent_long = create_silent_audio_file(4)
 
-
-
+    # Used to add a sequence number to file names
     row_count = 1
+
+    # Open CSV file which has columns: FW | EW | FP | EP
     with open(input_file) as cvs_file:
         csv_reader = csv.reader(cvs_file, delimiter=',')
         for row in csv_reader:
@@ -336,44 +307,44 @@ def tts_from_csv(input_file):
             foreign_phrase = row[2]
             english_phrase = row[3]
 
+            # text_to_mp3(voice_id, voice_engine, text
+
             # FW - Foreign Word
             ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(
                 voice_speed=voice_speed, text=foreign_word)
-            pcm_filename_0 = output_dir + workspace_dir + voice1_id + " - " + foreign_word + ".pcm"
-            create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, pcm_filename_0)
-            wav_filename_0 = convert_pcm_to_wav(pcm_filename_0)
-
+            foreign_word_pcm_filename = output_dir + workspace_dir + voice1_id + " - " + foreign_word + ".pcm"
+            create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, foreign_word_pcm_filename)
+            foreign_word_wav_filename = convert_pcm_to_wav(foreign_word_pcm_filename)
 
             # EW - English Word
-            ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
+            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(
                 voice_speed=voice_speed, text=english_word)
-            pcm_filename_1 = output_dir + workspace_dir + voice2_id + " - " + english_word + ".pcm"
-            create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, pcm_filename_1)
-            wav_filename_1 = convert_pcm_to_wav(pcm_filename_1)
+            english_word_pcm_filename = output_dir + workspace_dir + voice2_id + " - " + english_word + ".pcm"
+            create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, english_word_pcm_filename)
+            english_word_wav_filename = convert_pcm_to_wav(english_word_pcm_filename)
 
             # FP - Foreign Phrase
-            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='0s'/></speak>".format(
+            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(
                 voice_speed=voice_speed, text=foreign_phrase)
-            pcm_filename_2 = output_dir + workspace_dir + voice1_id + " - " + foreign_phrase + ".pcm"
-            create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, pcm_filename_2)
-            wav_filename_2 = convert_pcm_to_wav(pcm_filename_2)
+            foreign_phrase_pcm_filename = output_dir + workspace_dir + voice1_id + " - " + foreign_phrase + ".pcm"
+            create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, foreign_phrase_pcm_filename)
+            foreign_phrase_wav_filename = convert_pcm_to_wav(foreign_phrase_pcm_filename)
 
             # EP - English Phrase
-            ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
+            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(
                 voice_speed=voice_speed, text=english_phrase)
-            pcm_filename_3 = output_dir + workspace_dir + voice2_id + " - " + english_phrase + ".pcm"
-            create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, pcm_filename_3)
-            wav_filename_3 = convert_pcm_to_wav(pcm_filename_3)
-
+            english_phrase_pcm_filename = output_dir + workspace_dir + voice2_id + " - " + english_phrase + ".pcm"
+            create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, english_phrase_pcm_filename)
+            english_phrase_wav_filename = convert_pcm_to_wav(english_phrase_pcm_filename)
 
             # Combine the individual speech files into lessons based on templates
 
             # Template #0:
             audio_files = [
                 silent_short,
-                wav_filename_0,
+                foreign_word_wav_filename,
                 silent_medium,
-                wav_filename_1,
+                english_word_wav_filename,
                 silent_short
             ]
             filename_format = "{row} - {foreign_word} - {english_word}".format(row=row_count, foreign_word=foreign_word, english_word=english_word)
@@ -382,7 +353,6 @@ def tts_from_csv(input_file):
             combined_mp3_filename = \
                 convert_wav_to_mp3(combined_wav_filename, output_dir + template_0_dir + filename_format + ".mp3")
             print("► Created: " + combined_mp3_filename)
-
 
 
             # Reference:
@@ -398,7 +368,7 @@ def tts_from_csv(input_file):
              [0]atrim=duration=1[pause2];\
              [0]atrim=duration=0.5[pause3];\
              [pause1][1][pause2][2][pause3]concat=n=5:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p1} - {p2}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_0_dir,
+             \"{output_dir}{template_dir}{row_count} - {p1} - {p2}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_0_dir,
                                                                                  row_count=row_count)
 
 
@@ -407,8 +377,8 @@ def tts_from_csv(input_file):
                 "ffmpeg",
                 "-f", "lavfi",
                 "-i", "anullsrc=channel_layout=mono:sample_rate=16000",
-                "-i", pcm_filename_0,
-                "-i", pcm_filename_1,
+                "-i", foreign_word_pcm_filename,
+                "-i", english_word_pcm_filename,
                 "-filter_complex",
             ]
 
@@ -422,7 +392,7 @@ def tts_from_csv(input_file):
              [0]atrim=duration=1[pause2];\
              [0]atrim=duration=0.5[pause3];\
              [pause1][2][pause2][1][pause3]concat=n=5:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p2} - {p1}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_1_dir,
+             \"{output_dir}{template_dir}{row_count} - {p2} - {p1}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_1_dir,
                                                                                  row_count=row_count)
 
 
@@ -440,7 +410,7 @@ def tts_from_csv(input_file):
              [0]atrim=duration=4[pause4];\
              [0]atrim=duration=0.5[pause5];\
              [pause1][1][pause2][2][pause3][3][pause4][4][pause5]concat=n=9:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p1} - {p2} - {p3}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, f2=pcm_filename_2, f3=pcm_filename_3, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_2_dir,
+             \"{output_dir}{template_dir}{row_count} - {p1} - {p2} - {p3}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_2_dir,
                                                                                         row_count=row_count)
 
             # Template 3: "EW-FW-EP-FP/"
@@ -457,7 +427,7 @@ def tts_from_csv(input_file):
              [0]atrim=duration=4[pause4];\
              [0]atrim=duration=0.5[pause5];\
              [pause1][2][pause2][1][pause3][4][pause4][3][pause5]concat=n=9:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p2} - {p1} - {p3}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, f2=pcm_filename_2, f3=pcm_filename_3, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_3_dir,
+             \"{output_dir}{template_dir}{row_count} - {p2} - {p1} - {p3}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_3_dir,
                                                                                         row_count=row_count)
 
             # Template 4: "EP/"
@@ -468,7 +438,7 @@ def tts_from_csv(input_file):
              [0]atrim=duration=0.5[pause1];\
              [0]atrim=duration=1[pause2];\
              [pause1][1][pause2]concat=n=3:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p2}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, f2=pcm_filename_2, f3=pcm_filename_3, p1=row[1], p2=row[3], output_dir=output_dir, template_dir=template_4_dir,
+             \"{output_dir}{template_dir}{row_count} - {p2}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[1], p2=row[3], output_dir=output_dir, template_dir=template_4_dir,
                                                                           row_count=row_count)
 
 
@@ -481,7 +451,7 @@ def tts_from_csv(input_file):
              [0]atrim=duration=1[pause1];\
              [0]atrim=duration=1[pause2];\
              [pause1][1][pause2]concat=n=3:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p1}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, f2=pcm_filename_2, f3=pcm_filename_3, p1=row[2], output_dir=output_dir, template_dir=template_5_dir,
+             \"{output_dir}{template_dir}{row_count} - {p1}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[2], output_dir=output_dir, template_dir=template_5_dir,
                                                                           row_count=row_count)
 
 
@@ -529,7 +499,6 @@ def create_silent_audio_file(seconds):
     logging.debug("FFMPEG Create Silent Audio error output: \n" + process.stderr)
 
     return filename
-
 
 
 
