@@ -275,25 +275,28 @@ def tts_from_csv(input_file):
                 voice_speed=voice_speed, text=row[0])
             pcm_filename_0 = output_dir + workspace_dir + voice1_id + " - " + row[0] + ".pcm"
             create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, pcm_filename_0)
-            wav_filename_0 = convert_pcm_to_wav(pcm_filename_0)
+            convert_pcm_to_wav(pcm_filename_0)
 
             # EW - English Word
             ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[1])
             pcm_filename_1 = output_dir + workspace_dir + voice2_id + " - " + row[1] + ".pcm"
             create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, pcm_filename_1)
+            convert_pcm_to_wav(pcm_filename_1)
 
             # FP - Foreign Phrase
             ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[2])
             pcm_filename_2 = output_dir + workspace_dir + voice1_id + " - " + row[2] + ".pcm"
             create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, pcm_filename_2)
+            convert_pcm_to_wav(pcm_filename_2)
 
             # EP - English Phrase
             ssml_text = "<speak><prosody rate='100%'>{text}</prosody><break time='0s'/></speak>".format(
                 voice_speed=voice_speed, text=row[3])
             pcm_filename_3 = output_dir + workspace_dir + voice2_id + " - " + row[3] + ".pcm"
             create_audio_from_ssml(voice2_id, voice2_engine, ssml_text, pcm_filename_3)
+            convert_pcm_to_wav(pcm_filename_3)
 
 
             # Combine the individual speech files into lessons based on templates
@@ -301,8 +304,8 @@ def tts_from_csv(input_file):
             # Reference:
             # https://ffmpeg.org/ffmpeg-filters.html#Filtergraph-syntax-1
 
-            # Template 1: "FW - pause - EW - pause"
-            ffmpeg_cmd_1 = "ffmpeg \
+            # Template 0: "FW - pause - EW - pause"
+            ffmpeg_cmd_0 = "ffmpeg \
              -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
              -i \"{f0}\" \
              -i \"{f1}\" \
@@ -314,8 +317,19 @@ def tts_from_csv(input_file):
              \"{output_dir}{template_dir}{row_count} - {p1} - {p2}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_1_dir,
                 row_count=row_count)
 
+
+            # WIP
+            ffmpeg_cmd = [
+                "ffmpeg",
+                "-f", "lavfi",
+                "-i", "anullsrc=channel_layout=mono:sample_rate=16000",
+                "-i", pcm_filename_0,
+                "-i", pcm_filename_1,
+                "-filter_complex",
+            ]
+
             # Template 1: EW - pause - FW - pause
-            ffmpeg_cmd_2 = "ffmpeg \
+            ffmpeg_cmd_1 = "ffmpeg \
              -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
              -i \"{f0}\" \
              -i \"{f1}\" \
@@ -328,8 +342,8 @@ def tts_from_csv(input_file):
                 row_count=row_count)
 
 
-            # Template 3: FW - pause - EW - pause - FP - pause - EP
-            ffmpeg_cmd_3 = "ffmpeg \
+            # Template 2: FW - pause - EW - pause - FP - pause - EP
+            ffmpeg_cmd_2 = "ffmpeg \
              -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
              -i \"{f0}\" \
              -i \"{f1}\" \
@@ -345,8 +359,8 @@ def tts_from_csv(input_file):
              \"{output_dir}{template_dir}{row_count} - {p1} - {p2} - {p3}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, f2=pcm_filename_2, f3=pcm_filename_3, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_3_dir,
                 row_count=row_count)
 
-            # Template 4: "EW-FW-EP-FP/"
-            ffmpeg_cmd_4 = "ffmpeg \
+            # Template 3: "EW-FW-EP-FP/"
+            ffmpeg_cmd_3 = "ffmpeg \
              -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
              -i \"{f0}\" \
              -i \"{f1}\" \
@@ -362,8 +376,8 @@ def tts_from_csv(input_file):
              \"{output_dir}{template_dir}{row_count} - {p2} - {p1} - {p3}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, f2=pcm_filename_2, f3=pcm_filename_3, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_4_dir,
                 row_count=row_count)
 
-            # Template 5: "EP/"
-            ffmpeg_cmd_5 = "ffmpeg \
+            # Template 4: "EP/"
+            ffmpeg_cmd_4 = "ffmpeg \
              -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
              -i \"{f3}\" \
              -filter_complex \"\
@@ -375,8 +389,8 @@ def tts_from_csv(input_file):
 
 
 
-            # Template 6: "FP/"
-            ffmpeg_cmd_6 = "ffmpeg \
+            # Template 5: "FP/"
+            ffmpeg_cmd_5 = "ffmpeg \
              -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
              -i \"{f2}\" \
              -filter_complex \"\
@@ -390,6 +404,9 @@ def tts_from_csv(input_file):
 
 
             # Run the FFMPEG commands
+            logging.debug(ffmpeg_cmd_0)
+            os.system(ffmpeg_cmd_0)
+
             logging.debug(ffmpeg_cmd_1)
             os.system(ffmpeg_cmd_1)
 
@@ -404,9 +421,6 @@ def tts_from_csv(input_file):
 
             logging.debug(ffmpeg_cmd_5)
             os.system(ffmpeg_cmd_5)
-
-            logging.debug(ffmpeg_cmd_6)
-            os.system(ffmpeg_cmd_6)
 
             row_count += 1
 
