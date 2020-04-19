@@ -140,11 +140,11 @@ args = parser.parse_args()
 mode = args.mode
 input_file = args.filename
 output_dir = args.output_dir
-voice1_id = args.voice1
+foreign_voice_id = args.voice1
 voice2_id = args.voice2
 padding = args.padding
 voice_speed = args.speed
-voice1_engine = args.voice1_engine
+foreign_voice_engine = args.voice1_engine
 voice2_engine = args.voice2_engine
 
 # TODO: Dicts? some other structure?
@@ -183,8 +183,8 @@ def create_output_directories():
     print("Output files will be stored at: %s" % output_dir)
 
 
-def create_wav_from_ssml(voice_id, engine, ssml_text, filename):
-    logging.debug("\n\n-------[ AWS Polly call ]--------")
+def create_pcm_from_ssml(voice_id, engine, ssml_text, filename):
+    logging.debug("\n\n-------[ AWS Polly to PCM ]--------")
     logging.debug("Voice ID: " + voice_id)
     logging.debug("SSML: " + ssml_text)
     logging.debug("Filename: \"" + filename + "\"")
@@ -205,7 +205,6 @@ def create_wav_from_ssml(voice_id, engine, ssml_text, filename):
     process = subprocess.run(cmd, capture_output=True, text=True)
     logging.debug("Polly CMD standard output: \n" + process.stdout)
     logging.debug("Polly CMD error output: \n" + process.stderr)
-
 
 
 # Mode: CSV
@@ -288,10 +287,27 @@ def convert_wav_to_mp3(input_filename, output_filename):
     return output_filename
 
 
+def text_to_wav(voice_id, voice_engine, text):
+    logging.debug("\n\n-------[ Text to WAV: {text} ]--------".format(text=text))
+    logging.debug("Voice ID: " + voice_id)
+    logging.debug("Voice Engine: " + voice_engine)
+    logging.debug("Text: " + text)
+
+    ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(
+        voice_speed=voice_speed, text=text)
+    pcm_filename = output_dir + workspace_dir + voice_id + " - " + text + ".pcm"
+    create_pcm_from_ssml(voice_id, voice_engine, ssml_text, pcm_filename)
+    wav_filename = convert_pcm_to_wav(pcm_filename)
+
+    logging.debug("Text to WAV - Output filename: " + wav_filename)
+    logging.debug("---[ END: Text to WAV: {text} ]---".format(text=text))
+    return wav_filename
+
+
 def tts_from_csv(input_file):
-    silent_short = create_silent_wav_file(0.5)
-    silent_medium = create_silent_wav_file(1)
-    silent_long = create_silent_wav_file(4)
+    short_silence_filename = create_silent_wav_file(0.5)
+    medium_silence_filename = create_silent_wav_file(1)
+    long_silence_filename = create_silent_wav_file(4)
 
     # Used to add a sequence number to file names
     row_count = 1
@@ -306,45 +322,43 @@ def tts_from_csv(input_file):
             foreign_phrase = row[2]
             english_phrase = row[3]
 
-            # text_to_wav(voice_id, voice_engine, text
+            # text_to_wav(voice_id, voice_engine, text)
+
+
 
             # FW - Foreign Word
-            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(
-                voice_speed=voice_speed, text=foreign_word)
-            foreign_word_pcm_filename = output_dir + workspace_dir + voice1_id + " - " + foreign_word + ".pcm"
-            create_wav_from_ssml(voice1_id, voice1_engine, ssml_text, foreign_word_pcm_filename)
-            foreign_word_wav_filename = convert_pcm_to_wav(foreign_word_pcm_filename)
+            foreign_word_wav_filename = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_word)
 
             # EW - English Word
             ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(
                 voice_speed=voice_speed, text=english_word)
             english_word_pcm_filename = output_dir + workspace_dir + voice2_id + " - " + english_word + ".pcm"
-            create_wav_from_ssml(voice2_id, voice2_engine, ssml_text, english_word_pcm_filename)
+            create_pcm_from_ssml(voice2_id, voice2_engine, ssml_text, english_word_pcm_filename)
             english_word_wav_filename = convert_pcm_to_wav(english_word_pcm_filename)
 
             # FP - Foreign Phrase
             ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(
                 voice_speed=voice_speed, text=foreign_phrase)
-            foreign_phrase_pcm_filename = output_dir + workspace_dir + voice1_id + " - " + foreign_phrase + ".pcm"
-            create_wav_from_ssml(voice1_id, voice1_engine, ssml_text, foreign_phrase_pcm_filename)
+            foreign_phrase_pcm_filename = output_dir + workspace_dir + foreign_voice_id + " - " + foreign_phrase + ".pcm"
+            create_pcm_from_ssml(foreign_voice_id, foreign_voice_engine, ssml_text, foreign_phrase_pcm_filename)
             foreign_phrase_wav_filename = convert_pcm_to_wav(foreign_phrase_pcm_filename)
 
             # EP - English Phrase
             ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(
                 voice_speed=voice_speed, text=english_phrase)
             english_phrase_pcm_filename = output_dir + workspace_dir + voice2_id + " - " + english_phrase + ".pcm"
-            create_wav_from_ssml(voice2_id, voice2_engine, ssml_text, english_phrase_pcm_filename)
+            create_pcm_from_ssml(voice2_id, voice2_engine, ssml_text, english_phrase_pcm_filename)
             english_phrase_wav_filename = convert_pcm_to_wav(english_phrase_pcm_filename)
 
             # Combine the individual speech files into lessons based on templates
 
             # Template #0:
             audio_files = [
-                silent_short,
+                short_silence_filename,
                 foreign_word_wav_filename,
-                silent_medium,
+                medium_silence_filename,
                 english_word_wav_filename,
-                silent_short
+                short_silence_filename
             ]
             filename_format = "{row} - {foreign_word} - {english_word}".format(row=row_count, foreign_word=foreign_word, english_word=english_word)
             combined_wav_filename = \
@@ -354,106 +368,106 @@ def tts_from_csv(input_file):
             print("► Created: " + combined_mp3_filename)
 
 
-            # Reference:
-            # https://ffmpeg.org/ffmpeg-filters.html#Filtergraph-syntax-1
-
-            # Template 0: "FW - pause - EW - pause"
-            ffmpeg_cmd_0 = "ffmpeg \
-             -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
-             -i \"{f0}\" \
-             -i \"{f1}\" \
-             -filter_complex \"\
-             [0]atrim=duration=0.5[pause1];\
-             [0]atrim=duration=1[pause2];\
-             [0]atrim=duration=0.5[pause3];\
-             [pause1][1][pause2][2][pause3]concat=n=5:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p1} - {p2}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_0_dir,
-                                                                                 row_count=row_count)
-
-
-            # WIP
-            ffmpeg_cmd = [
-                "ffmpeg",
-                "-f", "lavfi",
-                "-i", "anullsrc=channel_layout=mono:sample_rate=16000",
-                "-i", foreign_word_pcm_filename,
-                "-i", english_word_pcm_filename,
-                "-filter_complex",
-            ]
-
-            # Template 1: EW - pause - FW - pause
-            ffmpeg_cmd_1 = "ffmpeg \
-             -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
-             -i \"{f0}\" \
-             -i \"{f1}\" \
-             -filter_complex \"\
-             [0]atrim=duration=0.5[pause1];\
-             [0]atrim=duration=1[pause2];\
-             [0]atrim=duration=0.5[pause3];\
-             [pause1][2][pause2][1][pause3]concat=n=5:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p2} - {p1}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_1_dir,
-                                                                                 row_count=row_count)
-
-
-            # Template 2: FW - pause - EW - pause - FP - pause - EP
-            ffmpeg_cmd_2 = "ffmpeg \
-             -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
-             -i \"{f0}\" \
-             -i \"{f1}\" \
-             -i \"{f2}\" \
-             -i \"{f3}\" \
-             -filter_complex \"\
-             [0]atrim=duration=0.5[pause1];\
-             [0]atrim=duration=1[pause2];\
-             [0]atrim=duration=1[pause3];\
-             [0]atrim=duration=4[pause4];\
-             [0]atrim=duration=0.5[pause5];\
-             [pause1][1][pause2][2][pause3][3][pause4][4][pause5]concat=n=9:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p1} - {p2} - {p3}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_2_dir,
-                                                                                        row_count=row_count)
-
-            # Template 3: "EW-FW-EP-FP/"
-            ffmpeg_cmd_3 = "ffmpeg \
-             -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
-             -i \"{f0}\" \
-             -i \"{f1}\" \
-             -i \"{f2}\" \
-             -i \"{f3}\" \
-             -filter_complex \"\
-             [0]atrim=duration=0.5[pause1];\
-             [0]atrim=duration=1[pause2];\
-             [0]atrim=duration=1[pause3];\
-             [0]atrim=duration=4[pause4];\
-             [0]atrim=duration=0.5[pause5];\
-             [pause1][2][pause2][1][pause3][4][pause4][3][pause5]concat=n=9:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p2} - {p1} - {p3}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_3_dir,
-                                                                                        row_count=row_count)
-
-            # Template 4: "EP/"
-            ffmpeg_cmd_4 = "ffmpeg \
-             -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
-             -i \"{f3}\" \
-             -filter_complex \"\
-             [0]atrim=duration=0.5[pause1];\
-             [0]atrim=duration=1[pause2];\
-             [pause1][1][pause2]concat=n=3:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p2}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[1], p2=row[3], output_dir=output_dir, template_dir=template_4_dir,
-                                                                          row_count=row_count)
-
-
-
-            # Template 5: "FP/"
-            ffmpeg_cmd_5 = "ffmpeg \
-             -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
-             -i \"{f2}\" \
-             -filter_complex \"\
-             [0]atrim=duration=1[pause1];\
-             [0]atrim=duration=1[pause2];\
-             [pause1][1][pause2]concat=n=3:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p1}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[2], output_dir=output_dir, template_dir=template_5_dir,
-                                                                          row_count=row_count)
-
-
+            # # Reference:
+            # # https://ffmpeg.org/ffmpeg-filters.html#Filtergraph-syntax-1
+            #
+            # # Template 0: "FW - pause - EW - pause"
+            # ffmpeg_cmd_0 = "ffmpeg \
+            #  -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
+            #  -i \"{f0}\" \
+            #  -i \"{f1}\" \
+            #  -filter_complex \"\
+            #  [0]atrim=duration=0.5[pause1];\
+            #  [0]atrim=duration=1[pause2];\
+            #  [0]atrim=duration=0.5[pause3];\
+            #  [pause1][1][pause2][2][pause3]concat=n=5:v=0:a=1\" \
+            #  \"{output_dir}{template_dir}{row_count} - {p1} - {p2}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_0_dir,
+            #                                                                      row_count=row_count)
+            #
+            #
+            # # WIP
+            # ffmpeg_cmd = [
+            #     "ffmpeg",
+            #     "-f", "lavfi",
+            #     "-i", "anullsrc=channel_layout=mono:sample_rate=16000",
+            #     "-i", foreign_word_pcm_filename,
+            #     "-i", english_word_pcm_filename,
+            #     "-filter_complex",
+            # ]
+            #
+            # # Template 1: EW - pause - FW - pause
+            # ffmpeg_cmd_1 = "ffmpeg \
+            #  -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
+            #  -i \"{f0}\" \
+            #  -i \"{f1}\" \
+            #  -filter_complex \"\
+            #  [0]atrim=duration=0.5[pause1];\
+            #  [0]atrim=duration=1[pause2];\
+            #  [0]atrim=duration=0.5[pause3];\
+            #  [pause1][2][pause2][1][pause3]concat=n=5:v=0:a=1\" \
+            #  \"{output_dir}{template_dir}{row_count} - {p2} - {p1}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_1_dir,
+            #                                                                      row_count=row_count)
+            #
+            #
+            # # Template 2: FW - pause - EW - pause - FP - pause - EP
+            # ffmpeg_cmd_2 = "ffmpeg \
+            #  -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
+            #  -i \"{f0}\" \
+            #  -i \"{f1}\" \
+            #  -i \"{f2}\" \
+            #  -i \"{f3}\" \
+            #  -filter_complex \"\
+            #  [0]atrim=duration=0.5[pause1];\
+            #  [0]atrim=duration=1[pause2];\
+            #  [0]atrim=duration=1[pause3];\
+            #  [0]atrim=duration=4[pause4];\
+            #  [0]atrim=duration=0.5[pause5];\
+            #  [pause1][1][pause2][2][pause3][3][pause4][4][pause5]concat=n=9:v=0:a=1\" \
+            #  \"{output_dir}{template_dir}{row_count} - {p1} - {p2} - {p3}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_2_dir,
+            #                                                                             row_count=row_count)
+            #
+            # # Template 3: "EW-FW-EP-FP/"
+            # ffmpeg_cmd_3 = "ffmpeg \
+            #  -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
+            #  -i \"{f0}\" \
+            #  -i \"{f1}\" \
+            #  -i \"{f2}\" \
+            #  -i \"{f3}\" \
+            #  -filter_complex \"\
+            #  [0]atrim=duration=0.5[pause1];\
+            #  [0]atrim=duration=1[pause2];\
+            #  [0]atrim=duration=1[pause3];\
+            #  [0]atrim=duration=4[pause4];\
+            #  [0]atrim=duration=0.5[pause5];\
+            #  [pause1][2][pause2][1][pause3][4][pause4][3][pause5]concat=n=9:v=0:a=1\" \
+            #  \"{output_dir}{template_dir}{row_count} - {p2} - {p1} - {p3}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_3_dir,
+            #                                                                             row_count=row_count)
+            #
+            # # Template 4: "EP/"
+            # ffmpeg_cmd_4 = "ffmpeg \
+            #  -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
+            #  -i \"{f3}\" \
+            #  -filter_complex \"\
+            #  [0]atrim=duration=0.5[pause1];\
+            #  [0]atrim=duration=1[pause2];\
+            #  [pause1][1][pause2]concat=n=3:v=0:a=1\" \
+            #  \"{output_dir}{template_dir}{row_count} - {p2}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[1], p2=row[3], output_dir=output_dir, template_dir=template_4_dir,
+            #                                                               row_count=row_count)
+            #
+            #
+            #
+            # # Template 5: "FP/"
+            # ffmpeg_cmd_5 = "ffmpeg \
+            #  -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
+            #  -i \"{f2}\" \
+            #  -filter_complex \"\
+            #  [0]atrim=duration=1[pause1];\
+            #  [0]atrim=duration=1[pause2];\
+            #  [pause1][1][pause2]concat=n=3:v=0:a=1\" \
+            #  \"{output_dir}{template_dir}{row_count} - {p1}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[2], output_dir=output_dir, template_dir=template_5_dir,
+            #                                                               row_count=row_count)
+            #
+            #
 
 
             # # Run the FFMPEG commands
@@ -498,7 +512,6 @@ def create_silent_wav_file(seconds):
     logging.debug("FFMPEG Create Silent Audio error output: \n" + process.stderr)
 
     return filename
-
 
 
 def main():
