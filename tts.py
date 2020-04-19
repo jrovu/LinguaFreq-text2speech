@@ -266,7 +266,7 @@ def convert_pcm_to_wav(input_filename):
 def concat_audio_files(audio_files, output_filename):
     logging.debug("\n\n--------[ Concat WAV files  ]--------")
     logging.debug("Output filename: " + output_filename)
-    ffmpeg_concat_list_filename = output_filename.replace(".wav", ".txt")
+    ffmpeg_concat_list_filename = output_filename.replace(output_dir + workspace_dir, "").replace(".wav", ".txt")
     logging.debug("FFMPEG Concat list filename:" + ffmpeg_concat_list_filename)
 
     with open(ffmpeg_concat_list_filename, "w") as concat_list_file:
@@ -281,7 +281,7 @@ def concat_audio_files(audio_files, output_filename):
         "-safe", "0",
         "-i", ffmpeg_concat_list_filename,
         "-c", "copy",
-        output_dir + workspace_dir + output_filename
+        output_filename
     ]
 
     logging.debug("FFMPEG Concat CMD: \n" + subprocess.list2cmdline(cmd))
@@ -297,8 +297,22 @@ def concat_audio_files(audio_files, output_filename):
     return output_filename
 
 
-def convert_wav_to_mp3(combined_filename_0, param):
-    pass
+def convert_wav_to_mp3(input_filename, output_filename):
+    logging.debug("\n\n--------[ Convert WAV to MP3  ]--------")
+    logging.debug("Input filename: " + input_filename)
+    logging.debug("Output filename: " + output_filename)
+
+    cmd = [
+        "ffmpeg",
+        "-i", input_filename,
+        output_filename
+    ]
+
+    logging.debug("FFMPEG Convert WAV to MP3 CMD: \n" + subprocess.list2cmdline(cmd))
+    process = subprocess.run(cmd, capture_output=True, text=True)
+    logging.debug("FFMPEG Convert WAV to MP3 standard output: \n" + process.stdout)
+    logging.debug("FFMPEG Convert WAV to MP3 error output: \n" + process.stderr)
+
 
 
 def tts_from_csv(input_file):
@@ -321,7 +335,6 @@ def tts_from_csv(input_file):
             pcm_filename_0 = output_dir + workspace_dir + voice1_id + " - " + row[0] + ".pcm"
             create_audio_from_ssml(voice1_id, voice1_engine, ssml_text, pcm_filename_0)
             wav_filename_0 = convert_pcm_to_wav(pcm_filename_0)
-
 
 
             # EW - English Word
@@ -348,7 +361,7 @@ def tts_from_csv(input_file):
 
             # Combine the individual speech files into lessons based on templates
 
-
+            # Template #0:
             audio_files_0 = [
                 silent_short,
                 wav_filename_0,
@@ -356,10 +369,9 @@ def tts_from_csv(input_file):
                 wav_filename_1,
                 silent_short
             ]
-            filename_format = "Combined {row} - {w0} - {w1}".format(row=row_count, w0=row[0], w1=row[1])
-            
-            combined_filename_0 = concat_audio_files(audio_files_0, filename_format + ".wav")
-            convert_wav_to_mp3(combined_filename_0, filename_format + ".mp3")
+            filename_format = "{row} - {w0} - {w1}".format(row=row_count, w0=row[0], w1=row[1])
+            combined_filename_0 = concat_audio_files(audio_files_0, output_dir + workspace_dir + filename_format + ".wav")
+            convert_wav_to_mp3(combined_filename_0, output_dir + template_1_dir + filename_format + ".mp3")
 
 
 
@@ -503,7 +515,6 @@ def create_silent_audio_file(seconds):
         filename
     ]
 
-    print(str(cmd))
     logging.debug("FFMPEG Create Silent Audio CMD: \n" + subprocess.list2cmdline(cmd))
     process = subprocess.run(cmd, capture_output=True, text=True)
     logging.debug("FFMPEG Create Silent Audio standard output: \n" + process.stdout)
@@ -522,10 +533,8 @@ def main():
     # Setup
     create_output_directories()
 
-    print(mode)
-
+    # Create text-to-speech phrase files from CSV file
     tts_from_csv(input_file)
-
 
     # Timer
     completion_time = datetime.now() - start_time
