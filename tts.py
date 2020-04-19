@@ -225,7 +225,6 @@ def create_audio_from_ssml(voice_id, engine, ssml_text, filename):
 
 
 
-
 # Mode: CSV
 # - Read from a 2-column CSV file
 def convert_pcm_to_wav(input_filename):
@@ -247,15 +246,25 @@ def convert_pcm_to_wav(input_filename):
     \"{output_filename}\"
     '''.format(input_filename=input_filename, output_filename=output_filename)
 
-    logging.debug("ffmpeg cmd:")
-    logging.debug(cmd)
-    os.system(cmd)
+    cmd = [
+        "ffmpeg",
+        "-f", "s16le",
+        "-ar", "16000",
+        "-ac", "1",
+        "-i", input_filename,
+        output_filename
+    ]
+
+    logging.debug("FFMPEG PCM to WAV CMD: \n" + subprocess.list2cmdline(cmd))
+    process = subprocess.run(cmd, capture_output=True, text=True)
+    logging.debug("FFMPEG PCM to WAV standard output: \n" + process.stdout)
+    logging.debug("FFMPEG PCM to WAV error output: \n" + process.stderr)
 
     return output_filename
 
 
 def concat_audio_files(audio_files, output_filename):
-    logging.debug("\n\n--------[ FFMPEG Concat ]--------")
+    logging.debug("\n\n--------[ Concat WAV files  ]--------")
     logging.debug("Output filename: " + output_filename)
     ffmpeg_concat_list_filename = output_filename.replace(".wav", ".txt")
     logging.debug("FFMPEG Concat list filename:" + ffmpeg_concat_list_filename)
