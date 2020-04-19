@@ -148,12 +148,12 @@ voice1_engine = args.voice1_engine
 voice2_engine = args.voice2_engine
 
 # TODO: Dicts? some other structure?
-template_1_dir = "FW-EW/"
-template_2_dir = "EW-FW/"
-template_3_dir = "FW-EW-FP-EP/"
-template_4_dir = "EW-FW-EP-FP/"
-template_5_dir = "EP/"
-template_6_dir = "FP/"
+template_0_dir = "FW-EW/"
+template_1_dir = "EW-FW/"
+template_2_dir = "FW-EW-FP-EP/"
+template_3_dir = "EW-FW-EP-FP/"
+template_4_dir = "EP/"
+template_5_dir = "FP/"
 workspace_dir = "_Workspace/"
 
 # LOGGING
@@ -173,12 +173,12 @@ def create_output_directories():
     # Create directories for output
     os.mkdir(output_dir)
 
+    os.mkdir(output_dir + template_0_dir)
     os.mkdir(output_dir + template_1_dir)
     os.mkdir(output_dir + template_2_dir)
     os.mkdir(output_dir + template_3_dir)
     os.mkdir(output_dir + template_4_dir)
     os.mkdir(output_dir + template_5_dir)
-    os.mkdir(output_dir + template_6_dir)
     os.mkdir(output_dir + workspace_dir)
     print("Output files will be stored at: %s" % output_dir)
 
@@ -313,6 +313,8 @@ def convert_wav_to_mp3(input_filename, output_filename):
     logging.debug("FFMPEG Convert WAV to MP3 standard output: \n" + process.stdout)
     logging.debug("FFMPEG Convert WAV to MP3 error output: \n" + process.stderr)
 
+    return output_filename
+
 
 
 def tts_from_csv(input_file):
@@ -362,7 +364,7 @@ def tts_from_csv(input_file):
             # Combine the individual speech files into lessons based on templates
 
             # Template #0:
-            audio_files_0 = [
+            audio_files = [
                 silent_short,
                 wav_filename_0,
                 silent_medium,
@@ -370,8 +372,11 @@ def tts_from_csv(input_file):
                 silent_short
             ]
             filename_format = "{row} - {w0} - {w1}".format(row=row_count, w0=row[0], w1=row[1])
-            combined_filename_0 = concat_audio_files(audio_files_0, output_dir + workspace_dir + filename_format + ".wav")
-            convert_wav_to_mp3(combined_filename_0, output_dir + template_1_dir + filename_format + ".mp3")
+            combined_wav_filename = concat_audio_files(audio_files,
+                                                       output_dir + workspace_dir + filename_format + ".wav")
+            combined_mp3_filename = convert_wav_to_mp3(combined_wav_filename,
+                                                       output_dir + template_0_dir + filename_format + ".mp3")
+            print("► Created: " + combined_mp3_filename)
 
 
 
@@ -390,8 +395,8 @@ def tts_from_csv(input_file):
              [0]atrim=duration=1[pause2];\
              [0]atrim=duration=0.5[pause3];\
              [pause1][1][pause2][2][pause3]concat=n=5:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p1} - {p2}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_1_dir,
-                row_count=row_count)
+             \"{output_dir}{template_dir}{row_count} - {p1} - {p2}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_0_dir,
+                                                                                 row_count=row_count)
 
 
             # WIP
@@ -414,8 +419,8 @@ def tts_from_csv(input_file):
              [0]atrim=duration=1[pause2];\
              [0]atrim=duration=0.5[pause3];\
              [pause1][2][pause2][1][pause3]concat=n=5:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p2} - {p1}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_2_dir,
-                row_count=row_count)
+             \"{output_dir}{template_dir}{row_count} - {p2} - {p1}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_1_dir,
+                                                                                 row_count=row_count)
 
 
             # Template 2: FW - pause - EW - pause - FP - pause - EP
@@ -432,8 +437,8 @@ def tts_from_csv(input_file):
              [0]atrim=duration=4[pause4];\
              [0]atrim=duration=0.5[pause5];\
              [pause1][1][pause2][2][pause3][3][pause4][4][pause5]concat=n=9:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p1} - {p2} - {p3}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, f2=pcm_filename_2, f3=pcm_filename_3, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_3_dir,
-                row_count=row_count)
+             \"{output_dir}{template_dir}{row_count} - {p1} - {p2} - {p3}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, f2=pcm_filename_2, f3=pcm_filename_3, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_2_dir,
+                                                                                        row_count=row_count)
 
             # Template 3: "EW-FW-EP-FP/"
             ffmpeg_cmd_3 = "ffmpeg \
@@ -449,8 +454,8 @@ def tts_from_csv(input_file):
              [0]atrim=duration=4[pause4];\
              [0]atrim=duration=0.5[pause5];\
              [pause1][2][pause2][1][pause3][4][pause4][3][pause5]concat=n=9:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p2} - {p1} - {p3}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, f2=pcm_filename_2, f3=pcm_filename_3, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_4_dir,
-                row_count=row_count)
+             \"{output_dir}{template_dir}{row_count} - {p2} - {p1} - {p3}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, f2=pcm_filename_2, f3=pcm_filename_3, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_3_dir,
+                                                                                        row_count=row_count)
 
             # Template 4: "EP/"
             ffmpeg_cmd_4 = "ffmpeg \
@@ -460,8 +465,8 @@ def tts_from_csv(input_file):
              [0]atrim=duration=0.5[pause1];\
              [0]atrim=duration=1[pause2];\
              [pause1][1][pause2]concat=n=3:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p2}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, f2=pcm_filename_2, f3=pcm_filename_3, p1=row[1], p2=row[3], output_dir=output_dir, template_dir=template_5_dir,
-                row_count=row_count)
+             \"{output_dir}{template_dir}{row_count} - {p2}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, f2=pcm_filename_2, f3=pcm_filename_3, p1=row[1], p2=row[3], output_dir=output_dir, template_dir=template_4_dir,
+                                                                          row_count=row_count)
 
 
 
@@ -473,8 +478,8 @@ def tts_from_csv(input_file):
              [0]atrim=duration=1[pause1];\
              [0]atrim=duration=1[pause2];\
              [pause1][1][pause2]concat=n=3:v=0:a=1\" \
-             \"{output_dir}{template_dir}{row_count} - {p1}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, f2=pcm_filename_2, f3=pcm_filename_3, p1=row[2], output_dir=output_dir, template_dir=template_6_dir,
-                row_count=row_count)
+             \"{output_dir}{template_dir}{row_count} - {p1}.mp3\"".format(f0=pcm_filename_0, f1=pcm_filename_1, f2=pcm_filename_2, f3=pcm_filename_3, p1=row[2], output_dir=output_dir, template_dir=template_5_dir,
+                                                                          row_count=row_count)
 
 
 
