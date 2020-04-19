@@ -180,7 +180,7 @@ def create_output_directories():
     os.mkdir(output_dir + template_5_dir)
     os.mkdir(output_dir + template_6_dir)
     os.mkdir(output_dir + workspace_dir)
-    print("Created output directory: %s" % output_dir)
+    print("Output files will be stored at: %s" % output_dir)
 
 
 
@@ -303,6 +303,7 @@ def convert_wav_to_mp3(combined_filename_0, param):
 
 def tts_from_csv(input_file):
 
+    logging.debug("Creating silent audio files")
     silent_short = create_silent_audio_file(0.5)
     silent_medium = create_silent_audio_file(1)
     silent_long = create_silent_audio_file(4)
@@ -489,24 +490,25 @@ def tts_from_csv(input_file):
 
 
 def create_silent_audio_file(seconds):
-    logging.debug(" ")
-    logging.debug(" ")
-    logging.debug("--------[ Creating silent audio file: {seconds} seconds ]--------".format(seconds=seconds))
+    logging.debug("\n\n--------[ Creating silent audio file: {seconds} seconds ]--------".format(seconds=seconds))
 
     filename = output_dir + workspace_dir + "silence_{seconds}s.wav".format(seconds=seconds)
     logging.debug(filename)
 
-    cmd = '''
-    ffmpeg \
-    -f lavfi \
-    -i anullsrc=channel_layout=mono:sample_rate=16000 \
-    -t {seconds} \
-    \"{filename}\"
-    '''.format(seconds=seconds, filename=filename)
+    cmd = [
+        "ffmpeg",
+        "-f", "lavfi",
+        "-i", "anullsrc=channel_layout=mono:sample_rate=16000",
+        "-t", "{seconds}".format(seconds=seconds),
+        filename
+    ]
 
-    logging.debug("ffmpeg command:")
-    logging.debug(cmd)
-    os.system(cmd)
+    print(str(cmd))
+    logging.debug("FFMPEG Create Silent Audio CMD: \n" + subprocess.list2cmdline(cmd))
+    process = subprocess.run(cmd, capture_output=True, text=True)
+    logging.debug("FFMPEG Create Silent Audio standard output: \n" + process.stdout)
+    logging.debug("FFMPEG Create Silent Audio error output: \n" + process.stderr)
+
     return filename
 
 
@@ -521,8 +523,6 @@ def main():
     create_output_directories()
 
     print(mode)
-
-
 
     tts_from_csv(input_file)
 
