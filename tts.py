@@ -93,32 +93,32 @@ parser.add_argument("-o", "--output_dir",
                     help="Directory where output files will be saved. \
                     WARNING: This directory is deleted each time the program is run.")
 
-parser.add_argument("-v1", "--voice1",
+parser.add_argument("--foreign_voice",
                     required=True,
-                    help="Voice ID of AWS Polly voice to use for the VOICE #1. \
+                    help="Voice ID of AWS Polly voice to use for the FOREIGN VOICE. \
                     See list of available voices: https://docs.aws.amazon.com/polly/latest/dg/voicelist.html")
 # Examples: "Lupe" (ES), "Zhiyu" (CN)
 
-parser.add_argument("-v2", "--voice2",
-                    default="Salli",
-                    help="Voice ID of AWS Polly voice to use for the VOICE #2. \
+parser.add_argument("--english_voice",
+                    default="Joanna",
+                    help="Voice ID of AWS Polly voice to use for the ENGLISH VOICE. \
                     See list of available voices: https://docs.aws.amazon.com/polly/latest/dg/voicelist.html")
-# Examples: "Lupe" (ES), "Zhiyu" (CN)
+# Examples: "Salli" (EN), "Joanna" (EN)
 
 parser.add_argument("-s", "--speed",
                     type=int,
                     default=100,
                     help="Voice speed rate (in PERCENTAGE)")
 
-parser.add_argument("-v1e", "--voice1_engine",
+parser.add_argument("--foreign_voice_engine",
                     choices=["standard", "neural"],
                     default="standard",
-                    help="Allows you to set the voice engine (for VOICE 1), if supported")
+                    help="Allows you to set the voice engine (for FOREIGN VOICE), if supported")
 
-parser.add_argument("-v2e", "--voice2_engine",
+parser.add_argument("--english_voice_engine",
                     choices=["standard", "neural"],
                     default="standard",
-                    help="Allows you to set the voice engine (for VOICE 2), if supported")
+                    help="Allows you to set the voice engine (for ENGLISH VOICE), if supported")
 
 # TODO: Add dry run
 
@@ -128,11 +128,11 @@ args = parser.parse_args()
 # SETTINGS VARIABLES
 input_file = args.filename
 output_dir = args.output_dir
-foreign_voice_id = args.voice1
-english_voice_id = args.voice2
+foreign_voice_id = args.foreign_voice
+english_voice_id = args.english_voice
 voice_speed = args.speed
-foreign_voice_engine = args.voice1_engine
-english_voice_engine = args.voice2_engine
+foreign_voice_engine = args.foreign_voice_engine
+english_voice_engine = args.english_voice_engine
 
 # TODO: Dicts? some other structure?
 template_0_dir = "FW-EW/"
