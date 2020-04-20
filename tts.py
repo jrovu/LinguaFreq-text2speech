@@ -2,7 +2,7 @@
 
 # Name: Batch Text-to-speech
 # Author: Jonathan Rogivue
-# Last updated: 2020-04-14
+# Last updated: 2020-04-19
 # -----------------------------
 
 
@@ -25,13 +25,6 @@
 # Polly Voice ID list: https://docs.aws.amazon.com/polly/latest/dg/voicelist.html
 # - Chinese: "Zhiyu"
 # - Spanish: "Lupe"
-
-# POLLY EXAMPLE
-# aws polly synthesize-speech \
-#    --output-format mp3 \
-#    --voice-id Joanna \
-#    --text 'Hello, my name is Joanna. I learned about the W3C on 10/3 of last year.' \
-#    hello.mp3
 
 # CHANGE VOICE SPEED EXAMPLE
 # --text-type ssml
@@ -61,8 +54,9 @@
 # -----------------------------
 # 1. Git clone: `git clone https://github.com/Helicer/batch-text2speech.git`
 # 2. Change to the directory `batch-text2speech.git`
-# 3. Edit `sentences.txt`, put sentences you want to make speech for
+# 3. Edit `example_chinese.csv`, put sentences you want to make speech for
 # 4. Run the program with `./tts.py`
+# EXAMPLE: ./tts.py -f example_spanish.csv --foreign_voice Lupe --foreign_voice_engine neural --english_voice Joanna --english_voice_engine neural -s 90
 #
 # GET HELP by running `tts.py -h`
 
@@ -82,7 +76,7 @@ parser = argparse.ArgumentParser(description="Text to speech. Takes a file as in
 # Arguments: 
 parser.add_argument("-v", "--verbose",
                     action="store_true",
-                    help="Increase verbosity of the program")
+                    help="Increase verbosity of the program & turns on debug mode. When debug is enabled, workspace directories & files are not deleted.")
 
 parser.add_argument("-f", "--filename",
                     required=True,
@@ -160,6 +154,7 @@ def create_output_directories():
     # Create directories for output
     os.mkdir(output_dir)
 
+    # Create directories for each template
     os.mkdir(output_dir + template_0_dir)
     os.mkdir(output_dir + template_1_dir)
     os.mkdir(output_dir + template_2_dir)
@@ -170,6 +165,7 @@ def create_output_directories():
     print("Output files will be stored at: %s" % output_dir)
 
 
+# Calls AWS Polly API and creates PCM audio files
 def create_pcm_from_ssml(voice_id, engine, ssml_text, filename):
     logging.debug("\n\n-------[ AWS Polly to PCM ]--------")
     logging.debug("Voice ID: " + voice_id)
@@ -194,8 +190,7 @@ def create_pcm_from_ssml(voice_id, engine, ssml_text, filename):
     logging.debug("Polly CMD error output: \n" + process.stderr)
 
 
-# Mode: CSV
-# - Read from a 2-column CSV file
+# Converts a PCM audio file to WAV audio file
 def convert_pcm_to_wav(input_filename):
     logging.debug("\n\n--------[ Converting PCM to WAV ]--------")
     logging.debug("Input filename: " + input_filename)
@@ -220,7 +215,7 @@ def convert_pcm_to_wav(input_filename):
 
     return output_filename
 
-
+# Concatenates several audio files into a single WAV file
 def concat_wav_files(audio_files, output_filename):
     logging.debug("\n\n--------[ Concat WAV files  ]--------")
     logging.debug("Output filename: " + output_filename)
@@ -230,6 +225,9 @@ def concat_wav_files(audio_files, output_filename):
     # Create a text file, and populate it (using `ffmpeg`s concat file format) with list of filenames
     with open(ffmpeg_concat_list_filename, "w") as concat_list_file:
         for filename in audio_files:
+
+            # Escape filenames according to FFMPEG's formatting.
+            # See: https://superuser.com/questions/787064/filename-quoting-in-ffmpeg-concat/787651
             escaped_filename = filename.replace("'", r"'\''")
             concat_list_file.write("file '{file}'\n".format(file=escaped_filename))
 
@@ -250,12 +248,14 @@ def concat_wav_files(audio_files, output_filename):
     logging.debug("FFMPEG Concat standard output: \n" + process.stdout)
     logging.debug("FFMPEG Concat error output: \n" + process.stderr)
 
+    # Delete the concat text unless Verbose/debug mode is enabled
     if args.verbose is not True:
         os.remove(ffmpeg_concat_list_filename)
 
     return output_filename
 
 
+# Converts a WAV audio file to an MP3 audio file
 def convert_wav_to_mp3(input_filename, output_filename):
     logging.debug("\n\n--------[ Convert WAV to MP3  ]--------")
     logging.debug("Input filename: " + input_filename)
@@ -276,6 +276,8 @@ def convert_wav_to_mp3(input_filename, output_filename):
     return output_filename
 
 
+# Creates a WAV audio file from text
+# - Calls AWS Polly, gets a PCM file, convert that file to WAV
 def text_to_wav(voice_id, voice_engine, text):
     logging.debug("\n\n-------[ Text to WAV: {text} ]--------".format(text=text))
     logging.debug("Voice ID: " + voice_id)
@@ -293,6 +295,10 @@ def text_to_wav(voice_id, voice_engine, text):
     return wav_filename
 
 
+# Combine audio files, create MP3s
+# - Takes a list of WAV audio files as input
+# - Concats WAV audio files
+# - Converts concat'd WAV file to MP3
 def combine_audio_files_to_mp3(audio_files, filename_format, template_dir):
     logging.debug("\n\n-------[ Combine Audio files to MP3 ]--------")
     logging.debug("Audio files: " + str(audio_files))
@@ -308,7 +314,10 @@ def combine_audio_files_to_mp3(audio_files, filename_format, template_dir):
     print("► Created: " + combined_mp3_filename)
     logging.debug("---[ END: Combine mp3 from audio files ]---")
 
-
+# CSV to Text-to-speech (TTS)
+# - Creates silent audio clips to use for pauses between clips
+# - Reads a CSV file which contains the words & phrases
+# - For each set of words & phrases, create WAV lessons based on templates
 def tts_from_csv(input_file):
     short_silence = create_silent_wav_file(0.5)
     medium_silence = create_silent_wav_file(1.5)
@@ -328,6 +337,9 @@ def tts_from_csv(input_file):
             foreign_phrase_text = row[2]
             english_phrase_text = row[3]
 
+            # Create WAV files for each word & phrases
+            # -----------------------------------------
+
             # Create WAV for FW (Foreign Word)
             foreign_word = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_word_text)
 
@@ -340,8 +352,8 @@ def tts_from_csv(input_file):
             # Create WAV for EP (English Phrase)
             english_phrase = text_to_wav(english_voice_id, english_voice_engine, english_phrase_text)
 
-
             # Combine the individual speech files into lessons based on templates
+            # -----------------------------------------
 
             # Template #0: "FW - EW"
             audio_files = [
@@ -354,7 +366,6 @@ def tts_from_csv(input_file):
             filename_format = "{row} - {FW} - {EW}".format(
                 row=row_count, FW=foreign_word_text, EW=english_word_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_0_dir)
-
 
             # Template #1: "EW - FW"
             audio_files = [
@@ -423,6 +434,7 @@ def tts_from_csv(input_file):
             row_count += 1
 
 
+# Creates silent WAV files of a given length in seconds
 def create_silent_wav_file(seconds):
     logging.debug("\n\n--------[ Creating silent audio file: {seconds} seconds ]--------".format(seconds=seconds))
 
@@ -450,17 +462,18 @@ def main():
     print("Text-to-speech using AWS Polly")
     start_time = datetime.now()  # Timer
 
-    # Setup
+    # Create directories to store the audio clips
     create_output_directories()
 
     # Create text-to-speech phrase files from CSV file
     tts_from_csv(input_file)
 
+    # Delete workspace directories unless verbose/debug mode is enabled
     if args.verbose is not True:
         print("CLeaning up workspace directories...")
         shutil.rmtree(output_dir + workspace_dir)
 
-    # Timer
+    # Display how long it took for the program to run
     completion_time = datetime.now() - start_time
     print("-----------------")
     print("Completed time: ", str(completion_time))  # TODO: Format time better
