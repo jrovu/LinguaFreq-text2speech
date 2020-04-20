@@ -263,7 +263,8 @@ def concat_wav_files(audio_files, output_filename):
     logging.debug("FFMPEG Concat standard output: \n" + process.stdout)
     logging.debug("FFMPEG Concat error output: \n" + process.stderr)
 
-    # TODO: Delete list file by default, keep if verbose
+    if args.verbose is not True:
+        os.remove(ffmpeg_concat_list_filename)
 
     return output_filename
 
@@ -489,6 +490,9 @@ def main():
 
     # Create text-to-speech phrase files from CSV file
     tts_from_csv(input_file)
+
+    if args.verbose is not True:
+        shutil.rmtree(output_dir + workspace_dir)
 
     # Timer
     completion_time = datetime.now() - start_time
