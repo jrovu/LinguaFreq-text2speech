@@ -380,6 +380,21 @@ def tts_from_csv(input_file):
                 row=row_count, EW=english_word_text, FW=foreign_word_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_1_dir)
 
+            # Template 2: "FW-EW-FP-EP/"
+            audio_files = [
+                short_silence,
+                foreign_word,
+                medium_silence,
+                english_word,
+                medium_silence,
+                foreign_phrase,
+                long_silence,
+                english_phrase,
+                short_silence
+            ]
+            filename_format = "{row} - {FW} - {EW} - {FP} - {EP}".format(
+                row=row_count, EW=english_word_text, FW=foreign_word_text, EP=english_phrase_text, FP=foreign_word_text)
+            combine_audio_files_to_mp3(audio_files, filename_format, template_2_dir)
 
             # Template 3: "EW-FW-EP-FP/"
             audio_files = [
@@ -397,50 +412,27 @@ def tts_from_csv(input_file):
                 row=row_count, EW=english_word_text, FW=foreign_word_text, EP=english_phrase_text, FP=foreign_word_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_3_dir)
 
+            # Template 4: "EP/"
+            audio_files = [
+                short_silence,
+                english_phrase,
+                short_silence
+            ]
+            filename_format = "{row} - {EP}".format(
+                row=row_count, EP=english_phrase_text)
+            combine_audio_files_to_mp3(audio_files, filename_format, template_4_dir)
 
 
+            # Template 5: "FP/"
+            audio_files = [
+                short_silence,
+                foreign_phrase,
+                short_silence
+            ]
+            filename_format = "{row} - {FP}".format(
+                row=row_count, FP=foreign_phrase_text)
+            combine_audio_files_to_mp3(audio_files, filename_format, template_5_dir)
 
-            # ffmpeg_cmd_3 = "ffmpeg \
-            #  -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
-            #  -i \"{f0}\" \
-            #  -i \"{f1}\" \
-            #  -i \"{f2}\" \
-            #  -i \"{f3}\" \
-            #  -filter_complex \"\
-            #  [0]atrim=duration=0.5[pause1];\
-            #  [0]atrim=duration=1[pause2];\
-            #  [0]atrim=duration=1[pause3];\
-            #  [0]atrim=duration=4[pause4];\
-            #  [0]atrim=duration=0.5[pause5];\
-            #  [pause1][2][pause2][1][pause3][4][pause4][3][pause5]concat=n=9:v=0:a=1\" \
-            #  \"{output_dir}{template_dir}{row_count} - {p2} - {p1} - {p3}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_3_dir,
-            #                                                                             row_count=row_count)
-            #
-            # # Template 4: "EP/"
-            # ffmpeg_cmd_4 = "ffmpeg \
-            #  -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
-            #  -i \"{f3}\" \
-            #  -filter_complex \"\
-            #  [0]atrim=duration=0.5[pause1];\
-            #  [0]atrim=duration=1[pause2];\
-            #  [pause1][1][pause2]concat=n=3:v=0:a=1\" \
-            #  \"{output_dir}{template_dir}{row_count} - {p2}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[1], p2=row[3], output_dir=output_dir, template_dir=template_4_dir,
-            #                                                               row_count=row_count)
-            #
-            #
-            #
-            # # Template 5: "FP/"
-            # ffmpeg_cmd_5 = "ffmpeg \
-            #  -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
-            #  -i \"{f2}\" \
-            #  -filter_complex \"\
-            #  [0]atrim=duration=1[pause1];\
-            #  [0]atrim=duration=1[pause2];\
-            #  [pause1][1][pause2]concat=n=3:v=0:a=1\" \
-            #  \"{output_dir}{template_dir}{row_count} - {p1}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[2], output_dir=output_dir, template_dir=template_5_dir,
-            #                                                               row_count=row_count)
-            #
-            #
 
 
             # # Run the FFMPEG commands
