@@ -141,11 +141,11 @@ mode = args.mode
 input_file = args.filename
 output_dir = args.output_dir
 foreign_voice_id = args.voice1
-voice2_id = args.voice2
+english_voice_id = args.voice2
 padding = args.padding
 voice_speed = args.speed
 foreign_voice_engine = args.voice1_engine
-voice2_engine = args.voice2_engine
+english_voice_engine = args.voice2_engine
 
 # TODO: Dicts? some other structure?
 template_0_dir = "FW-EW/"
@@ -242,8 +242,9 @@ def concat_wav_files(audio_files, output_filename):
 
     # Create a text file, and populate it (using `ffmpeg`s concat file format) with list of filenames
     with open(ffmpeg_concat_list_filename, "w") as concat_list_file:
-        for file in audio_files:
-            concat_list_file.write("file '{file}'\n".format(file=file))
+        for filename in audio_files:
+            escaped_filename = filename.replace("'", r"'\''")
+            concat_list_file.write("file '{file}'\n".format(file=escaped_filename))
 
     concat_list_file.close()
 
@@ -304,10 +305,26 @@ def text_to_wav(voice_id, voice_engine, text):
     return wav_filename
 
 
+def combine_audio_files_to_mp3(audio_files, filename_format, template_dir):
+    logging.debug("\n\n-------[ Combine Audio files to MP3 ]--------")
+    logging.debug("Audio files: " + str(audio_files))
+    logging.debug("Filename format: " + filename_format)
+    logging.debug("Template directory: " + template_dir)
+
+    combined_wav_filename = \
+        concat_wav_files(audio_files, output_dir + workspace_dir + filename_format + ".wav")
+    combined_mp3_filename = \
+        convert_wav_to_mp3(combined_wav_filename, output_dir + template_dir + filename_format + ".mp3")
+
+    logging.debug("Created MP3 from audio files: " + combined_mp3_filename)
+    print("► Created: " + combined_mp3_filename)
+    logging.debug("---[ END: Combine mp3 from audio files ]---")
+
+
 def tts_from_csv(input_file):
-    short_silence_filename = create_silent_wav_file(0.5)
-    medium_silence_filename = create_silent_wav_file(1)
-    long_silence_filename = create_silent_wav_file(4)
+    short_silence = create_silent_wav_file(0.5)
+    medium_silence = create_silent_wav_file(1.5)
+    long_silence = create_silent_wav_file(4)
 
     # Used to add a sequence number to file names
     row_count = 1
@@ -317,116 +334,72 @@ def tts_from_csv(input_file):
         csv_reader = csv.reader(cvs_file, delimiter=',')
         for row in csv_reader:
 
-            foreign_word = row[0]
-            english_word = row[1]
-            foreign_phrase = row[2]
-            english_phrase = row[3]
+            # Assign words & phrases from CSV format
+            foreign_word_text = row[0]
+            english_word_text = row[1]
+            foreign_phrase_text = row[2]
+            english_phrase_text = row[3]
 
-            # text_to_wav(voice_id, voice_engine, text)
+            # Create WAV for FW (Foreign Word)
+            foreign_word = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_word_text)
 
+            # Create WAV for EW (English Word)
+            english_word = text_to_wav(english_voice_id, english_voice_engine, english_word_text)
 
+            # Create WAV for FP (Foreign Phrase)
+            foreign_phrase = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_phrase_text)
 
-            # FW - Foreign Word
-            foreign_word_wav_filename = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_word)
+            # Create WAV for EP (English Phrase)
+            english_phrase = text_to_wav(english_voice_id, english_voice_engine, english_phrase_text)
 
-            # EW - English Word
-            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(
-                voice_speed=voice_speed, text=english_word)
-            english_word_pcm_filename = output_dir + workspace_dir + voice2_id + " - " + english_word + ".pcm"
-            create_pcm_from_ssml(voice2_id, voice2_engine, ssml_text, english_word_pcm_filename)
-            english_word_wav_filename = convert_pcm_to_wav(english_word_pcm_filename)
-
-            # FP - Foreign Phrase
-            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(
-                voice_speed=voice_speed, text=foreign_phrase)
-            foreign_phrase_pcm_filename = output_dir + workspace_dir + foreign_voice_id + " - " + foreign_phrase + ".pcm"
-            create_pcm_from_ssml(foreign_voice_id, foreign_voice_engine, ssml_text, foreign_phrase_pcm_filename)
-            foreign_phrase_wav_filename = convert_pcm_to_wav(foreign_phrase_pcm_filename)
-
-            # EP - English Phrase
-            ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(
-                voice_speed=voice_speed, text=english_phrase)
-            english_phrase_pcm_filename = output_dir + workspace_dir + voice2_id + " - " + english_phrase + ".pcm"
-            create_pcm_from_ssml(voice2_id, voice2_engine, ssml_text, english_phrase_pcm_filename)
-            english_phrase_wav_filename = convert_pcm_to_wav(english_phrase_pcm_filename)
 
             # Combine the individual speech files into lessons based on templates
 
-            # Template #0:
+            # Template #0: "FW - EW"
             audio_files = [
-                short_silence_filename,
-                foreign_word_wav_filename,
-                medium_silence_filename,
-                english_word_wav_filename,
-                short_silence_filename
+                short_silence,
+                foreign_word,
+                medium_silence,
+                english_word,
+                short_silence
             ]
-            filename_format = "{row} - {foreign_word} - {english_word}".format(row=row_count, foreign_word=foreign_word, english_word=english_word)
-            combined_wav_filename = \
-                concat_wav_files(audio_files, output_dir + workspace_dir + filename_format + ".wav")
-            combined_mp3_filename = \
-                convert_wav_to_mp3(combined_wav_filename, output_dir + template_0_dir + filename_format + ".mp3")
-            print("► Created: " + combined_mp3_filename)
+            filename_format = "{row} - {FW} - {EW}".format(
+                row=row_count, FW=foreign_word_text, EW=english_word_text)
+            combine_audio_files_to_mp3(audio_files, filename_format, template_0_dir)
 
 
-            # # Reference:
-            # # https://ffmpeg.org/ffmpeg-filters.html#Filtergraph-syntax-1
-            #
-            # # Template 0: "FW - pause - EW - pause"
-            # ffmpeg_cmd_0 = "ffmpeg \
-            #  -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
-            #  -i \"{f0}\" \
-            #  -i \"{f1}\" \
-            #  -filter_complex \"\
-            #  [0]atrim=duration=0.5[pause1];\
-            #  [0]atrim=duration=1[pause2];\
-            #  [0]atrim=duration=0.5[pause3];\
-            #  [pause1][1][pause2][2][pause3]concat=n=5:v=0:a=1\" \
-            #  \"{output_dir}{template_dir}{row_count} - {p1} - {p2}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_0_dir,
-            #                                                                      row_count=row_count)
-            #
-            #
-            # # WIP
-            # ffmpeg_cmd = [
-            #     "ffmpeg",
-            #     "-f", "lavfi",
-            #     "-i", "anullsrc=channel_layout=mono:sample_rate=16000",
-            #     "-i", foreign_word_pcm_filename,
-            #     "-i", english_word_pcm_filename,
-            #     "-filter_complex",
-            # ]
-            #
-            # # Template 1: EW - pause - FW - pause
-            # ffmpeg_cmd_1 = "ffmpeg \
-            #  -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
-            #  -i \"{f0}\" \
-            #  -i \"{f1}\" \
-            #  -filter_complex \"\
-            #  [0]atrim=duration=0.5[pause1];\
-            #  [0]atrim=duration=1[pause2];\
-            #  [0]atrim=duration=0.5[pause3];\
-            #  [pause1][2][pause2][1][pause3]concat=n=5:v=0:a=1\" \
-            #  \"{output_dir}{template_dir}{row_count} - {p2} - {p1}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, p1=row[0], p2=row[1], output_dir=output_dir, template_dir=template_1_dir,
-            #                                                                      row_count=row_count)
-            #
-            #
-            # # Template 2: FW - pause - EW - pause - FP - pause - EP
-            # ffmpeg_cmd_2 = "ffmpeg \
-            #  -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
-            #  -i \"{f0}\" \
-            #  -i \"{f1}\" \
-            #  -i \"{f2}\" \
-            #  -i \"{f3}\" \
-            #  -filter_complex \"\
-            #  [0]atrim=duration=0.5[pause1];\
-            #  [0]atrim=duration=1[pause2];\
-            #  [0]atrim=duration=1[pause3];\
-            #  [0]atrim=duration=4[pause4];\
-            #  [0]atrim=duration=0.5[pause5];\
-            #  [pause1][1][pause2][2][pause3][3][pause4][4][pause5]concat=n=9:v=0:a=1\" \
-            #  \"{output_dir}{template_dir}{row_count} - {p1} - {p2} - {p3}.mp3\"".format(f0=foreign_word_pcm_filename, f1=english_word_pcm_filename, f2=foreign_phrase_pcm_filename, f3=english_phrase_pcm_filename, p1=row[0], p2=row[1], p3=row[2], output_dir=output_dir, template_dir=template_2_dir,
-            #                                                                             row_count=row_count)
-            #
-            # # Template 3: "EW-FW-EP-FP/"
+            # Template #1: "EW - FW"
+            audio_files = [
+                short_silence,
+                english_word,
+                medium_silence,
+                foreign_word,
+                short_silence
+            ]
+            filename_format = "{row} - {EW} - {FW}".format(
+                row=row_count, EW=english_word_text, FW=foreign_word_text)
+            combine_audio_files_to_mp3(audio_files, filename_format, template_1_dir)
+
+
+            # Template 3: "EW-FW-EP-FP/"
+            audio_files = [
+                short_silence,
+                english_word,
+                medium_silence,
+                foreign_word,
+                medium_silence,
+                english_phrase,
+                long_silence,
+                foreign_phrase,
+                short_silence
+            ]
+            filename_format = "{row} - {EW} - {FW} - {EP} - {FP}".format(
+                row=row_count, EW=english_word_text, FW=foreign_word_text, EP=english_phrase_text, FP=foreign_word_text)
+            combine_audio_files_to_mp3(audio_files, filename_format, template_3_dir)
+
+
+
+
             # ffmpeg_cmd_3 = "ffmpeg \
             #  -f lavfi -i anullsrc=channel_layout=mono:sample_rate=16000 \
             #  -i \"{f0}\" \
