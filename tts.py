@@ -9,7 +9,7 @@
 # USER STORY: 
 # -----------------------------
 # "As a language learner, 
-# I should be able to quickly convert a text file of sentences into audio files, 
+# I should be able to quickly convert a list of words & phrases of sentences into audio files,
 # so that I can practice listening to them"
 
 
@@ -214,6 +214,7 @@ def convert_pcm_to_wav(input_filename):
     logging.debug("FFMPEG PCM to WAV error output: \n" + process.stderr)
 
     return output_filename
+
 
 # Concatenates several audio files into a single WAV file
 def concat_wav_files(audio_files, output_filename):
