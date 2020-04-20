@@ -84,12 +84,6 @@ parser.add_argument("-v", "--verbose",
                     action="store_true",
                     help="Increase verbosity of the program")
 
-parser.add_argument("-m", "--mode",
-                    choices=["simpletext", "csv"],
-                    required=True,
-                    help="Determines which mode to use. A simple text file ('simpletext'), or a CSV ('csv')")
-# TODO: Determine mode from file format
-
 parser.add_argument("-f", "--filename",
                     required=True,
                     help="Name of the input file")
@@ -110,11 +104,6 @@ parser.add_argument("-v2", "--voice2",
                     help="Voice ID of AWS Polly voice to use for the VOICE #2. \
                     See list of available voices: https://docs.aws.amazon.com/polly/latest/dg/voicelist.html")
 # Examples: "Lupe" (ES), "Zhiyu" (CN)
-
-parser.add_argument("-p", "--padding",
-                    type=int,
-                    default=0.5,
-                    help="Number of SECONDS of padding to add to end of sound file (better for playlists)")
 
 parser.add_argument("-s", "--speed",
                     type=int,
@@ -137,12 +126,10 @@ parser.add_argument("-v2e", "--voice2_engine",
 args = parser.parse_args()
 
 # SETTINGS VARIABLES
-mode = args.mode
 input_file = args.filename
 output_dir = args.output_dir
 foreign_voice_id = args.voice1
 english_voice_id = args.voice2
-padding = args.padding
 voice_speed = args.speed
 foreign_voice_engine = args.voice1_engine
 english_voice_engine = args.voice2_engine
@@ -432,27 +419,6 @@ def tts_from_csv(input_file):
             filename_format = "{row} - {FP}".format(
                 row=row_count, FP=foreign_phrase_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_5_dir)
-
-
-
-            # # Run the FFMPEG commands
-            # logging.debug(ffmpeg_cmd_0)
-            # os.system(ffmpeg_cmd_0)
-            #
-            # logging.debug(ffmpeg_cmd_1)
-            # os.system(ffmpeg_cmd_1)
-            #
-            # logging.debug(ffmpeg_cmd_2)
-            # os.system(ffmpeg_cmd_2)
-            #
-            # logging.debug(ffmpeg_cmd_3)
-            # os.system(ffmpeg_cmd_3)
-            #
-            # logging.debug(ffmpeg_cmd_4)
-            # os.system(ffmpeg_cmd_4)
-            #
-            # logging.debug(ffmpeg_cmd_5)
-            # #os.system(ffmpeg_cmd_5)
 
             row_count += 1
 
