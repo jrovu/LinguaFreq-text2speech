@@ -470,7 +470,7 @@ def main():
 
     # Delete workspace directories unless verbose/debug mode is enabled
     if args.verbose is not True:
-        print("CLeaning up workspace directories...")
+        print("Cleaning up workspace directories...")
         shutil.rmtree(output_dir + workspace_dir)
 
     # Display how long it took for the program to run
