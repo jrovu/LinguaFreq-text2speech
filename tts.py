@@ -394,7 +394,7 @@ def tts_from_csv(input_file):
                 short_silence
             ]
             filename_format = "{row} - {FW} - {EW} - {FP} - {EP}".format(
-                row=row_count, EW=english_word_text, FW=foreign_word_text, EP=english_phrase_text, FP=foreign_word_text)
+                row=row_count, EW=english_word_text, FW=foreign_word_text, EP=english_phrase_text, FP=foreign_phrase_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_2_dir)
 
             # Template 3: "EW-FW-EP-FP/"
@@ -410,7 +410,7 @@ def tts_from_csv(input_file):
                 short_silence
             ]
             filename_format = "{row} - {EW} - {FW} - {EP} - {FP}".format(
-                row=row_count, EW=english_word_text, FW=foreign_word_text, EP=english_phrase_text, FP=foreign_word_text)
+                row=row_count, EW=english_word_text, FW=foreign_word_text, EP=english_phrase_text, FP=foreign_phrase_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_3_dir)
 
             # Template 4: "EP/"
@@ -422,7 +422,6 @@ def tts_from_csv(input_file):
             filename_format = "{row} - {EP}".format(
                 row=row_count, EP=english_phrase_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_4_dir)
-
 
             # Template 5: "FP/"
             audio_files = [
@@ -492,6 +491,7 @@ def main():
     tts_from_csv(input_file)
 
     if args.verbose is not True:
+        print("CLeaning up workspace directories...")
         shutil.rmtree(output_dir + workspace_dir)
 
     # Timer
