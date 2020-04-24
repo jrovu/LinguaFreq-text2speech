@@ -135,6 +135,8 @@ template_2_dir = "FW-EW-FP-EP/"
 template_3_dir = "EW-FW-EP-FP/"
 template_4_dir = "EP/"
 template_5_dir = "FP/"
+template_6_dir = "FP+Pause/"
+template_7_dir = "FP+Pause (Slow)/"
 workspace_dir = "_Workspace/"
 
 # LOGGING
@@ -161,6 +163,8 @@ def create_output_directories():
     os.mkdir(output_dir + template_3_dir)
     os.mkdir(output_dir + template_4_dir)
     os.mkdir(output_dir + template_5_dir)
+    os.mkdir(output_dir + template_6_dir)
+    os.mkdir(output_dir + template_7_dir)
     os.mkdir(output_dir + workspace_dir)
     print("Output files will be stored at: %s" % output_dir)
 
@@ -201,6 +205,7 @@ def convert_pcm_to_wav(input_filename):
     # Build out `ffmpeg` command to convert PCM to WAV
     cmd = [
         "ffmpeg",
+        "-y",
         "-f", "s16le",
         "-ar", "16000",
         "-ac", "1",
@@ -237,6 +242,7 @@ def concat_wav_files(audio_files, output_filename):
     # Build out `ffmpeg` command to use the concat text file (containing list of of WAV files) into a single WAV
     cmd = [
         "ffmpeg",
+        "-y",
         "-f", "concat",
         "-safe", "0",
         "-i", ffmpeg_concat_list_filename,
@@ -279,15 +285,16 @@ def convert_wav_to_mp3(input_filename, output_filename):
 
 # Creates a WAV audio file from text
 # - Calls AWS Polly, gets a PCM file, convert that file to WAV
-def text_to_wav(voice_id, voice_engine, text):
+def text_to_wav(voice_id, voice_engine, text, voice_speed=voice_speed):
     logging.debug("\n\n-------[ Text to WAV: {text} ]--------".format(text=text))
     logging.debug("Voice ID: " + voice_id)
     logging.debug("Voice Engine: " + voice_engine)
     logging.debug("Text: " + text)
+    logging.debug("Speed: " + str(voice_speed))
 
     ssml_text = "<speak><prosody rate='{voice_speed}%'>{text}</prosody></speak>".format(
         voice_speed=voice_speed, text=text)
-    pcm_filename = output_dir + workspace_dir + voice_id + " - " + text + ".pcm"
+    pcm_filename = output_dir + workspace_dir + voice_id + " - " + text + " - " + str(voice_speed) + ".pcm"
     create_pcm_from_ssml(voice_id, voice_engine, ssml_text, pcm_filename)
     wav_filename = convert_pcm_to_wav(pcm_filename)
 
@@ -321,7 +328,7 @@ def combine_audio_files_to_mp3(audio_files, filename_format, template_dir):
 # - Reads a CSV file which contains the words & phrases
 # - For each set of words & phrases, create WAV lessons based on templates
 def tts_from_csv(input_file):
-    short_silence = create_silent_wav_file(0.5)
+    short_silence = create_silent_wav_file(1.0)
     medium_silence = create_silent_wav_file(1.5)
     long_silence = create_silent_wav_file(4)
 
@@ -350,6 +357,9 @@ def tts_from_csv(input_file):
 
             # Create WAV for FP (Foreign Phrase)
             foreign_phrase = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_phrase_text)
+
+            # Create WAV for FP (Foreign Phrase)
+            foreign_phrase_slow = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_phrase_text, voice_speed=80)
 
             # Create WAV for EP (English Phrase)
             english_phrase = text_to_wav(english_voice_id, english_voice_engine, english_phrase_text)
@@ -433,6 +443,26 @@ def tts_from_csv(input_file):
                 row=row_count, FP=foreign_phrase_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_5_dir)
 
+            # Template 6: "FP+Pause/"
+            audio_files = [
+                short_silence,
+                foreign_phrase,
+                long_silence
+            ]
+            filename_format = "{row} - {FP}".format(
+                row=row_count, FP=foreign_phrase_text)
+            combine_audio_files_to_mp3(audio_files, filename_format, template_6_dir)
+
+            # Template 7: "FP+Pause (Slow)/"
+            audio_files = [
+                short_silence,
+                foreign_phrase_slow,
+                long_silence
+            ]
+            filename_format = "{row} - {FP}".format(
+                row=row_count, FP=foreign_phrase_text)
+            combine_audio_files_to_mp3(audio_files, filename_format, template_7_dir)
+
             row_count += 1
 
 
@@ -445,6 +475,7 @@ def create_silent_wav_file(seconds):
 
     cmd = [
         "ffmpeg",
+        "-y",
         "-f", "lavfi",
         "-i", "anullsrc=channel_layout=mono:sample_rate=16000",
         "-t", "{seconds}".format(seconds=seconds),
