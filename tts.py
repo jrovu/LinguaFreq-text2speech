@@ -441,7 +441,7 @@ def tts_from_csv(input_file):
             ]
             filename_format = "{row} - {FP}".format(
                 row=row_count, FP=foreign_phrase_text)
-            # combine_audio_files_to_mp3(audio_files, filename_format, template_5_dir)
+            combine_audio_files_to_mp3(audio_files, filename_format, template_5_dir)
 
             # Template 6: "FP+Pause/"
             audio_files = [
