@@ -341,10 +341,11 @@ def tts_from_csv(input_file):
         for row in csv_reader:
 
             # Assign words & phrases from CSV format
-            foreign_word_text = row[0]
-            english_word_text = row[1]
-            foreign_phrase_text = row[2]
-            english_phrase_text = row[3]
+            phrase_number = row[0]
+            foreign_word_text = row[1]
+            english_word_text = row[2]
+            foreign_phrase_text = row[3]
+            english_phrase_text = row[4]
 
             # Create WAV files for each word & phrases
             # -----------------------------------------
@@ -375,9 +376,9 @@ def tts_from_csv(input_file):
                 english_word,
                 short_silence
             ]
-            filename_format = "{row} - {FW} - {EW}".format(
-                row=row_count, FW=foreign_word_text, EW=english_word_text)
-            # combine_audio_files_to_mp3(audio_files, filename_format, template_0_dir)
+            filename_format = "{phrase_number} - {FW} - {EW}".format(
+                phrase_number=phrase_number, FW=foreign_word_text, EW=english_word_text)
+            combine_audio_files_to_mp3(audio_files, filename_format, template_0_dir)
 
             # Template #1: "EW - FW"
             audio_files = [
@@ -387,9 +388,9 @@ def tts_from_csv(input_file):
                 foreign_word,
                 short_silence
             ]
-            filename_format = "{row} - {EW} - {FW}".format(
-                row=row_count, EW=english_word_text, FW=foreign_word_text)
-            # combine_audio_files_to_mp3(audio_files, filename_format, template_1_dir)
+            filename_format = "{phrase_number} - {EW} - {FW}".format(
+                phrase_number=phrase_number, EW=english_word_text, FW=foreign_word_text)
+            combine_audio_files_to_mp3(audio_files, filename_format, template_1_dir)
 
             # Template 2: "FW-EW-FP-EP/"
             audio_files = [
@@ -403,9 +404,9 @@ def tts_from_csv(input_file):
                 english_phrase,
                 short_silence
             ]
-            filename_format = "{row} - {FW} - {EW} - {FP} - {EP}".format(
-                row=row_count, EW=english_word_text, FW=foreign_word_text, EP=english_phrase_text, FP=foreign_phrase_text)
-            # combine_audio_files_to_mp3(audio_files, filename_format, template_2_dir)
+            filename_format = "{phrase_number} - {FW} - {EW} - {FP} - {EP}".format(
+                phrase_number=phrase_number, EW=english_word_text, FW=foreign_word_text, EP=english_phrase_text, FP=foreign_phrase_text)
+            combine_audio_files_to_mp3(audio_files, filename_format, template_2_dir)
 
             # Template 3: "EW-FW-EP-FP/"
             audio_files = [
@@ -419,9 +420,9 @@ def tts_from_csv(input_file):
                 foreign_phrase,
                 short_silence
             ]
-            filename_format = "{row} - {EW} - {FW} - {EP} - {FP}".format(
-                row=row_count, EW=english_word_text, FW=foreign_word_text, EP=english_phrase_text, FP=foreign_phrase_text)
-            # combine_audio_files_to_mp3(audio_files, filename_format, template_3_dir)
+            filename_format = "{phrase_number} - {EW} - {FW} - {EP} - {FP}".format(
+                phrase_number=phrase_number, EW=english_word_text, FW=foreign_word_text, EP=english_phrase_text, FP=foreign_phrase_text)
+            combine_audio_files_to_mp3(audio_files, filename_format, template_3_dir)
 
             # Template 4: "EP/"
             audio_files = [
@@ -429,9 +430,9 @@ def tts_from_csv(input_file):
                 english_phrase,
                 short_silence
             ]
-            filename_format = "{row} - {EP}".format(
-                row=row_count, EP=english_phrase_text)
-            # combine_audio_files_to_mp3(audio_files, filename_format, template_4_dir)
+            filename_format = "{phrase_number} - {EP}".format(
+                phrase_number=phrase_number, EP=english_phrase_text)
+            combine_audio_files_to_mp3(audio_files, filename_format, template_4_dir)
 
             # Template 5: "FP/"
             audio_files = [
@@ -439,8 +440,8 @@ def tts_from_csv(input_file):
                 foreign_phrase,
                 short_silence
             ]
-            filename_format = "{row} - {FP}".format(
-                row=row_count, FP=foreign_phrase_text)
+            filename_format = "{phrase_number} - {FP}".format(
+                phrase_number=phrase_number, FP=foreign_phrase_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_5_dir)
 
             # Template 6: "FP+Pause/"
@@ -449,8 +450,8 @@ def tts_from_csv(input_file):
                 foreign_phrase,
                 long_silence
             ]
-            filename_format = "{row} - {FP}".format(
-                row=row_count, FP=foreign_phrase_text)
+            filename_format = "{phrase_number} - {FP}".format(
+                phrase_number=phrase_number, FP=foreign_phrase_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_6_dir)
 
             # Template 7: "FP+Pause (Slow)/"
@@ -459,9 +460,9 @@ def tts_from_csv(input_file):
                 foreign_phrase_slow,
                 long_silence
             ]
-            filename_format = "{row} - {FP}".format(
-                row=row_count, FP=foreign_phrase_text)
-            # combine_audio_files_to_mp3(audio_files, filename_format, template_7_dir)
+            filename_format = "{phrase_number} - {FP}".format(
+                phrase_number=phrase_number, FP=foreign_phrase_text)
+            combine_audio_files_to_mp3(audio_files, filename_format, template_7_dir)
 
             row_count += 1
 
