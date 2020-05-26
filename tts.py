@@ -341,6 +341,7 @@ def lessons_from_csv(input_file):
     long_silence = create_silent_wav_file(4)
 
     # Used to add a sequence number to file names
+    # TODO: Remove, not used anymore (getting row count from CSV)
     row_count = 1
 
     # Open CSV file which has columns: FW | EW | FP | EP
@@ -472,6 +473,7 @@ def lessons_from_csv(input_file):
                 phrase_number=phrase_number, FP=foreign_phrase_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_7_dir)
 
+            # TODO: Remove
             row_count += 1
 
 
