@@ -335,7 +335,7 @@ def combine_audio_files_to_mp3(audio_files, filename_format, template_dir):
 # - Creates silent audio clips to use for pauses between clips
 # - Reads a CSV file which contains the words & phrases
 # - For each set of words & phrases, create WAV lessons based on templates
-def tts_from_csv(input_file):
+def lessons_from_csv(input_file):
     short_silence = create_silent_wav_file(1.0)
     medium_silence = create_silent_wav_file(1.5)
     long_silence = create_silent_wav_file(4)
@@ -499,6 +499,10 @@ def create_silent_wav_file(seconds):
     return filename
 
 
+def pyramid_from_csv(input_file):
+    logging.debug("\n\n--------[ Pyramid from CSV ]--------")
+
+
 def main():
     print("-----------------")
     print("Text-to-speech using AWS Polly")
@@ -512,10 +516,11 @@ def main():
     # Create text-to-speech phrase files from CSV file
     if "lessons" in mode:
         logging.debug("Using Mode: lesson")
-        tts_from_csv(input_file)
+        lessons_from_csv(input_file)
 
     if "pyramid" in mode:
         logging.debug("Using Mode: Pyramid")
+        pyramid_from_csv(input_file)
 
 
     # Delete workspace directories unless verbose/debug mode is enabled
