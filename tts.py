@@ -336,9 +336,9 @@ def combine_audio_files_to_mp3(audio_files, filename_format, template_dir):
 # - Reads a CSV file which contains the words & phrases
 # - For each set of words & phrases, create WAV lessons based on templates
 def lessons_from_csv(input_file):
-    short_silence = create_silent_wav_file(1.0)
-    medium_silence = create_silent_wav_file(1.5)
-    long_silence = create_silent_wav_file(4)
+    short_silence_file = create_silent_wav_file(1.0)
+    medium_silence_file = create_silent_wav_file(1.5)
+    long_silence_file = create_silent_wav_file(4)
 
     # Open CSV file which has columns: FW | EW | FP | EP
     with open(input_file) as cvs_file:
@@ -356,30 +356,30 @@ def lessons_from_csv(input_file):
             # -----------------------------------------
 
             # Create WAV for FW (Foreign Word)
-            foreign_word = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_word_text)
+            foreign_word_file = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_word_text)
 
             # Create WAV for EW (English Word)
-            english_word = text_to_wav(english_voice_id, english_voice_engine, english_word_text)
+            english_word_file = text_to_wav(english_voice_id, english_voice_engine, english_word_text)
 
             # Create WAV for FP (Foreign Phrase)
-            foreign_phrase = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_phrase_text)
+            foreign_phrase_file = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_phrase_text)
 
             # Create WAV for FP (Foreign Phrase)
-            foreign_phrase_slow = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_phrase_text, voice_speed=80)
+            foreign_phrase_slow_file = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_phrase_text, voice_speed=80)
 
             # Create WAV for EP (English Phrase)
-            english_phrase = text_to_wav(english_voice_id, english_voice_engine, english_phrase_text)
+            english_phrase_file = text_to_wav(english_voice_id, english_voice_engine, english_phrase_text)
 
             # Combine the individual speech files into lessons based on templates
             # -----------------------------------------
 
             # Template #0: "FW - EW"
             audio_files = [
-                short_silence,
-                foreign_word,
-                medium_silence,
-                english_word,
-                short_silence
+                short_silence_file,
+                foreign_word_file,
+                medium_silence_file,
+                english_word_file,
+                short_silence_file
             ]
             filename_format = "{phrase_number} - {FW} - {EW}".format(
                 phrase_number=phrase_number, FW=foreign_word_text, EW=english_word_text)
@@ -387,11 +387,11 @@ def lessons_from_csv(input_file):
 
             # Template #1: "EW - FW"
             audio_files = [
-                short_silence,
-                english_word,
-                medium_silence,
-                foreign_word,
-                short_silence
+                short_silence_file,
+                english_word_file,
+                medium_silence_file,
+                foreign_word_file,
+                short_silence_file
             ]
             filename_format = "{phrase_number} - {EW} - {FW}".format(
                 phrase_number=phrase_number, EW=english_word_text, FW=foreign_word_text)
@@ -399,15 +399,15 @@ def lessons_from_csv(input_file):
 
             # Template 2: "FW-EW-FP-EP/"
             audio_files = [
-                short_silence,
-                foreign_word,
-                medium_silence,
-                english_word,
-                medium_silence,
-                foreign_phrase,
-                long_silence,
-                english_phrase,
-                short_silence
+                short_silence_file,
+                foreign_word_file,
+                medium_silence_file,
+                english_word_file,
+                medium_silence_file,
+                foreign_phrase_file,
+                long_silence_file,
+                english_phrase_file,
+                short_silence_file
             ]
             filename_format = "{phrase_number} - {FW} - {EW} - {FP} - {EP}".format(
                 phrase_number=phrase_number, EW=english_word_text, FW=foreign_word_text, EP=english_phrase_text, FP=foreign_phrase_text)
@@ -415,15 +415,15 @@ def lessons_from_csv(input_file):
 
             # Template 3: "EW-FW-EP-FP/"
             audio_files = [
-                short_silence,
-                english_word,
-                medium_silence,
-                foreign_word,
-                medium_silence,
-                english_phrase,
-                long_silence,
-                foreign_phrase,
-                short_silence
+                short_silence_file,
+                english_word_file,
+                medium_silence_file,
+                foreign_word_file,
+                medium_silence_file,
+                english_phrase_file,
+                long_silence_file,
+                foreign_phrase_file,
+                short_silence_file
             ]
             filename_format = "{phrase_number} - {EW} - {FW} - {EP} - {FP}".format(
                 phrase_number=phrase_number, EW=english_word_text, FW=foreign_word_text, EP=english_phrase_text, FP=foreign_phrase_text)
@@ -431,9 +431,9 @@ def lessons_from_csv(input_file):
 
             # Template 4: "EP/"
             audio_files = [
-                short_silence,
-                english_phrase,
-                short_silence
+                short_silence_file,
+                english_phrase_file,
+                short_silence_file
             ]
             filename_format = "{phrase_number} - {EP}".format(
                 phrase_number=phrase_number, EP=english_phrase_text)
@@ -441,9 +441,9 @@ def lessons_from_csv(input_file):
 
             # Template 5: "FP/"
             audio_files = [
-                short_silence,
-                foreign_phrase,
-                short_silence
+                short_silence_file,
+                foreign_phrase_file,
+                short_silence_file
             ]
             filename_format = "{phrase_number} - {FP}".format(
                 phrase_number=phrase_number, FP=foreign_phrase_text)
@@ -451,9 +451,9 @@ def lessons_from_csv(input_file):
 
             # Template 6: "FP+Pause/"
             audio_files = [
-                short_silence,
-                foreign_phrase,
-                long_silence
+                short_silence_file,
+                foreign_phrase_file,
+                long_silence_file
             ]
             filename_format = "{phrase_number} - {FP}".format(
                 phrase_number=phrase_number, FP=foreign_phrase_text)
@@ -461,9 +461,9 @@ def lessons_from_csv(input_file):
 
             # Template 7: "FP+Pause (Slow)/"
             audio_files = [
-                short_silence,
-                foreign_phrase_slow,
-                long_silence
+                short_silence_file,
+                foreign_phrase_slow_file,
+                long_silence_file
             ]
             filename_format = "{phrase_number} - {FP}".format(
                 phrase_number=phrase_number, FP=foreign_phrase_text)
@@ -520,6 +520,8 @@ def pyramid_from_csv(input_file):
     # Open CSV file which has columns: Row #, <unbounded list of phrases to combine>
     with open(input_file) as cvs_file:
         csv_reader = csv.reader(cvs_file, delimiter=',')
+
+        # For each phrase line
         for row in csv_reader:
 
             column_count = 0
@@ -532,24 +534,30 @@ def pyramid_from_csv(input_file):
             #   "I am going"
             #   "I am going to"...
 
-
-            pyramid_phrases = []
+            # For each word in a phrase, add it to the phrase_pieces list
+            # Skip the first column, as it's reserved for the phrase number
             phrase_pieces = []
-
             for column in row:
-
                 # First column is for the phrase number
                 if column_count is 0:
                     logging.debug("Pyramid: #" + str(column))
                     phrase_number = column
                 else:
+                    # CSV creates empty columns to pad out a row, to the row with the most columns.
+                    # We do not want to include these empty pieces.
                     if column not in (None, ""):
                         phrase_pieces.append(column)
 
+                # This will be used to provide an number for each pyramid associated with a phrase
                 column_count = column_count + 1
 
+            # For a phrase, create pyramid strings from phrase's pieces
             pyramid_phrases = phrase_pieces_to_pyramid_phrases(phrase_pieces)
             logging.debug("Pyramid phrases: " + str(pyramid_phrases))
+
+            for pyramid_phrase in pyramid_phrases:
+                logging.debug("Text to speech: " + pyramid_phrase)
+
 
 
 
