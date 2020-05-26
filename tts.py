@@ -494,8 +494,105 @@ def create_silent_wav_file(seconds):
     return filename
 
 
+# Takes a list of phrase pieces (e.g. "I", "am", "going") and creates factorial-like
+# phrases. Like "I", "I am", "I am going"
+def phrase_pieces_to_pyramid_phrases(phrase_pieces):
+    logging.debug("\n\n--------[ Phrase Pieces to Pyramid Phrases ]--------")
+    logging.debug("Pieces: " + str(phrase_pieces))
+    pyramid_phrases = []
+    pyramid_phrase = ""
+
+    for piece in phrase_pieces:
+        pyramid_phrase = pyramid_phrase + piece
+        logging.debug("Phrase: " + pyramid_phrase)
+        pyramid_phrases.append(pyramid_phrase)
+
+    return pyramid_phrases
+
+
 def pyramid_from_csv(input_file):
     logging.debug("\n\n--------[ Pyramid from CSV ]--------")
+
+    # short_silence = create_silent_wav_file(1.0)
+    # medium_silence = create_silent_wav_file(1.5)
+    # long_silence = create_silent_wav_file(4)
+
+    # Open CSV file which has columns: Row #, <unbounded list of phrases to combine>
+    with open(input_file) as cvs_file:
+        csv_reader = csv.reader(cvs_file, delimiter=',')
+        for row in csv_reader:
+
+            column_count = 0
+
+            # Phrase: This is one row in the XLS. E.g. "I", "am", "going", "to", "work
+            # phrase_pieces: list of pieces in a Phrase
+            # Pyramid phrase: For each Phrase, we create a Pyramid_phrase from its Phrase_pieces
+            #   "I"
+            #   "I am"
+            #   "I am going"
+            #   "I am going to"...
+
+
+            pyramid_phrases = []
+            phrase_pieces = []
+
+            for column in row:
+
+                # First column is for the phrase number
+                if column_count is 0:
+                    logging.debug("Pyramid: #" + str(column))
+                    phrase_number = column
+                else:
+                    if column not in (None, ""):
+                        phrase_pieces.append(column)
+
+                column_count = column_count + 1
+
+            pyramid_phrases = phrase_pieces_to_pyramid_phrases(phrase_pieces)
+            logging.debug("Pyramid phrases: " + str(pyramid_phrases))
+
+
+
+
+
+
+
+            # piece_count = column count, minus the row number
+            # pieces = each, word, in, an, array
+            # pyramid_phrases = pieces_to_pyramid(pieces):
+            #   pyramid_phrases = (empty list)
+            #   combined_phrase = ""
+            #   for piece in pieces:
+            #       combined_phrase = combined_phrase + piece
+            #       pyramid_phrases.add(combined_phrase)
+            #   return pyramid_phrase
+            #
+
+            # for phrase in pyramid_phrases:
+            #   phrase_file = text_to_wav(phrase)
+            #   audio_files = (silence, phrase file, etc)
+            #   format the file name, phrase number and pyramid iteration
+            #   combine audio files to mp3
+            #
+
+
+
+
+
+
+
+            # Assign words & phrases from CSV format
+            phrase_number = row[0]
+
+
+
+
+            foreign_word_text = row[1]
+            english_word_text = row[2]
+            foreign_phrase_text = row[3]
+            english_phrase_text = row[4]
+
+
 
 
 def main():
