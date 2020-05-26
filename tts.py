@@ -513,9 +513,8 @@ def phrase_pieces_to_pyramid_phrases(phrase_pieces):
 def pyramid_from_csv(input_file):
     logging.debug("\n\n--------[ Pyramid from CSV ]--------")
 
-    # short_silence = create_silent_wav_file(1.0)
-    # medium_silence = create_silent_wav_file(1.5)
-    # long_silence = create_silent_wav_file(4)
+
+    short_silence_file = create_silent_wav_file(1.0)
 
     # Open CSV file which has columns: Row #, <unbounded list of phrases to combine>
     with open(input_file) as cvs_file:
@@ -555,8 +554,23 @@ def pyramid_from_csv(input_file):
             pyramid_phrases = phrase_pieces_to_pyramid_phrases(phrase_pieces)
             logging.debug("Pyramid phrases: " + str(pyramid_phrases))
 
+            # Create audio files for each pyramid phrase
+            pyramid_phrase_files = []
             for pyramid_phrase in pyramid_phrases:
                 logging.debug("Text to speech: " + pyramid_phrase)
+                pyramid_phrase_file = text_to_wav(foreign_voice_id, foreign_voice_engine, pyramid_phrase)
+                pyramid_phrase_files.append(pyramid_phrase_file)
+
+            logging.debug("Pyramid phrase files: " + str(pyramid_phrase_files))
+
+            # TODO: NEXT STEP
+            # Create a lesson var as a list. This contains the playlist of all the soundfiles to combine
+            # Set a counter
+            # Loop thru the list of files
+            # For each file
+            # - Add to the lesson list
+            # - Add appropriate gap
+            # Burn these as one big MP3
 
 
 
