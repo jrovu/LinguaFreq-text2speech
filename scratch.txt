@@ -188,3 +188,49 @@ ffmpeg -y -f concat -i concat.txt -c copy out-test.wav
 # Create text file, add filenames to it
 # Call to FFMPEG, create full phrase file
 
+-----------
+
+silence[0.1]
+
+
+
+
+
+for row in csv_reader:
+
+    If row[0] is "TEMPLATE" and row[1] is TRUE:
+        # Create new template instance
+        template.directory = row[2]
+        template.files = []
+
+        col_count = length of row
+
+        for column in row:
+            if column contains "PAD"
+                seconds = (scrape seconds out of the string)
+                silence[seconds] = create_silent_wav_file(seconds)
+                template.files.add(silence[seconds]
+             if column contains "FW":
+                speed = (scrape speed)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

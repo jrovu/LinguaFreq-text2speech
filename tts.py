@@ -114,6 +114,11 @@ parser.add_argument("--english_voice_engine",
                     default="standard",
                     help="Allows you to set the voice engine (for ENGLISH VOICE), if supported")
 
+parser.add_argument("--mode",
+                    choices=["lessons", "pyramid"],
+                    default="lessons",
+                    help="Determines which CSV structure and output to use.")
+
 # TODO: Add dry run
 
 # Assign arguments to SETTINGS variables
@@ -127,6 +132,7 @@ english_voice_id = args.english_voice
 voice_speed = args.speed
 foreign_voice_engine = args.foreign_voice_engine
 english_voice_engine = args.english_voice_engine
+mode = args.mode
 
 # TODO: Dicts? some other structure?
 template_0_dir = "FW-EW/"
@@ -137,6 +143,7 @@ template_4_dir = "EP/"
 template_5_dir = "FP/"
 template_6_dir = "FP+Pause/"
 template_7_dir = "FP+Pause (Slow)/"
+template_8_dir = "Pyramid/"
 workspace_dir = "_Workspace/"
 
 # LOGGING
@@ -165,6 +172,7 @@ def create_output_directories():
     os.mkdir(output_dir + template_5_dir)
     os.mkdir(output_dir + template_6_dir)
     os.mkdir(output_dir + template_7_dir)
+    os.mkdir(output_dir + template_8_dir)
     os.mkdir(output_dir + workspace_dir)
     print("Output files will be stored at: %s" % output_dir)
 
@@ -499,8 +507,16 @@ def main():
     # Create directories to store the audio clips
     create_output_directories()
 
+
+
     # Create text-to-speech phrase files from CSV file
-    tts_from_csv(input_file)
+    if "lessons" in mode:
+        logging.debug("Using Mode: lesson")
+        tts_from_csv(input_file)
+
+    if "pyramid" in mode:
+        logging.debug("Using Mode: Pyramid")
+
 
     # Delete workspace directories unless verbose/debug mode is enabled
     if args.verbose is not True:
