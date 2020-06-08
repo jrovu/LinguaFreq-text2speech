@@ -518,10 +518,10 @@ def pyramid_from_csv(input_file):
 
     # Open CSV file which has columns: Row #, <unbounded list of phrases to combine>
     with open(input_file) as cvs_file:
-        csv_reader = csv.reader(cvs_file, delimiter=',')
+        phrases = csv.reader(cvs_file, delimiter=',')
 
         # For each phrase line
-        for row in csv_reader:
+        for phrase in phrases:
 
             column_count = 0
 
@@ -533,19 +533,29 @@ def pyramid_from_csv(input_file):
             #   "I am going"
             #   "I am going to"...
 
-            # For each word in a phrase, add it to the phrase_pieces list
-            # Skip the first column, as it's reserved for the phrase number
+            # List of all pieces for THIS phrase
             phrase_pieces = []
-            for column in row:
-                # First column is for the phrase number
+
+            # For each word in a phrase, add it to the phrase_pieces list
+            #
+            # Skips the first column, as it's reserved for the phrase number:
+            for phrase_piece in phrase:
+
+                # First column (phrase #)
                 if column_count is 0:
-                    logging.debug("Pyramid: #" + str(column))
-                    phrase_number = column
+                    logging.debug("Pyramid: #" + str(phrase_piece))
+                    phrase_number = phrase_piece
+
+                # For all the other phrase pieces:
                 else:
                     # CSV creates empty columns to pad out a row, to the row with the most columns.
                     # We do not want to include these empty pieces.
-                    if column not in (None, ""):
-                        phrase_pieces.append(column)
+                    #
+                    # Skips adding a piece, if this piece is EMPTY:
+                    if phrase_piece not in (None, ""):
+
+                        # Adds this piece to the list of phrases:
+                        phrase_pieces.append(phrase_piece)
 
                 # This will be used to provide an number for each pyramid associated with a phrase
                 column_count = column_count + 1
@@ -604,15 +614,15 @@ def pyramid_from_csv(input_file):
 
 
             # Assign words & phrases from CSV format
-            phrase_number = row[0]
+            phrase_number = phrase[0]
 
 
 
 
-            foreign_word_text = row[1]
-            english_word_text = row[2]
-            foreign_phrase_text = row[3]
-            english_phrase_text = row[4]
+            foreign_word_text = phrase[1]
+            english_word_text = phrase[2]
+            foreign_phrase_text = phrase[3]
+            english_phrase_text = phrase[4]
 
 
 
