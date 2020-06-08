@@ -535,6 +535,8 @@ def pyramid_from_csv(input_file):
 
             # List of all pieces for THIS phrase
             phrase_pieces = []
+            phrase_number = 0  # TODO: Default to none?
+            phrase_text = ""
 
             # For each word in a phrase, add it to the phrase_pieces list
             #
@@ -571,7 +573,17 @@ def pyramid_from_csv(input_file):
                 pyramid_phrase_file = text_to_wav(foreign_voice_id, foreign_voice_engine, pyramid_phrase)
                 pyramid_phrase_files.append(pyramid_phrase_file)
 
+                # TODO: Update to use silent gaps which match the length of the word
+                pyramid_phrase_files.append(short_silence_file)
+
             logging.debug("Pyramid phrase files: " + str(pyramid_phrase_files))
+
+            # Combine the LIST of a phrase's pieces into a STRING
+            phrase_text = ' '.join(map(str, phrase_pieces))
+
+            filename_format = "{phrase_number} - {phrase_text} - Pyramid".format(
+                phrase_number=phrase_number, phrase_text=phrase_text)
+            combine_audio_files_to_mp3(pyramid_phrase_files, filename_format, template_8_dir)
 
             # TODO: NEXT STEP
             # Create a lesson var as a list. This contains the playlist of all the soundfiles to combine
@@ -581,9 +593,6 @@ def pyramid_from_csv(input_file):
             # - Add to the lesson list
             # - Add appropriate gap
             # Burn these as one big MP3
-
-
-
 
 
 
