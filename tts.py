@@ -513,8 +513,7 @@ def phrase_pieces_to_pyramid_phrases(phrase_pieces):
 def pyramid_from_csv(input_file):
     logging.debug("\n\n--------[ Pyramid from CSV ]--------")
 
-
-    short_silence_file = create_silent_wav_file(1.0)
+    short_silence_file = create_silent_wav_file(0.5)
 
     # Open CSV file which has columns: Row #, <unbounded list of phrases to combine>
     with open(input_file) as cvs_file:
@@ -566,15 +565,21 @@ def pyramid_from_csv(input_file):
             pyramid_phrases = phrase_pieces_to_pyramid_phrases(phrase_pieces)
             logging.debug("Pyramid phrases: " + str(pyramid_phrases))
 
-            # Create audio files for each pyramid phrase
             pyramid_phrase_files = []
+
+            # Create audio files for each pyramid phrase
+            padding_to_add = 3
             for pyramid_phrase in pyramid_phrases:
                 logging.debug("Text to speech: " + pyramid_phrase)
                 pyramid_phrase_file = text_to_wav(foreign_voice_id, foreign_voice_engine, pyramid_phrase)
                 pyramid_phrase_files.append(pyramid_phrase_file)
 
-                # TODO: Update to use silent gaps which match the length of the word
-                pyramid_phrase_files.append(short_silence_file)
+                padding_count = 0
+                while padding_count < padding_to_add:
+                    pyramid_phrase_files.append(short_silence_file)
+                    padding_count = padding_count + 1
+
+                padding_to_add = padding_to_add + 1
 
             logging.debug("Pyramid phrase files: " + str(pyramid_phrase_files))
 
