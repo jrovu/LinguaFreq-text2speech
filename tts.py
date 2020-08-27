@@ -6,9 +6,9 @@
 # -----------------------------
 
 
-# USER STORY: 
+# USER STORY:
 # -----------------------------
-# "As a language learner, 
+# "As a language learner,
 # I should be able to quickly convert a list of words & phrases of sentences into audio files,
 # so that I can practice listening to them"
 
@@ -50,7 +50,7 @@
 # - `awscli` configured (`aws configure`) with correct user
 
 
-# HOW TO INSTALL 
+# HOW TO INSTALL
 # -----------------------------
 # 1. Git clone: `git clone https://github.com/Helicer/batch-text2speech.git`
 # 2. Change to the directory `batch-text2speech.git`
@@ -68,12 +68,13 @@ import os
 import shutil
 from datetime import datetime
 import subprocess
+import json
 
 # COMMAND LINE ARGUMENTS
 # Setup Arguments
 parser = argparse.ArgumentParser(description="Text to speech. Takes a file as input, and converts the lines into MP3s.")
 
-# Arguments: 
+# Arguments:
 parser.add_argument("-v", "--verbose",
                     action="store_true",
                     help="Increase verbosity of the program & turns on debug mode. When debug is enabled, workspace directories & files are not deleted.")
@@ -147,7 +148,7 @@ template_8_dir = "Pyramid/"
 workspace_dir = "_Workspace/"
 
 # LOGGING
-# - Configure & enable logging when --verbose 
+# - Configure & enable logging when --verbose
 if args.verbose:
     logging.basicConfig(level=logging.DEBUG)
 
@@ -340,35 +341,68 @@ def lessons_from_csv(input_file):
     medium_silence_file = create_silent_wav_file(1.5)
     long_silence_file = create_silent_wav_file(4)
 
+    # JSON
+    #    lessons []
+
+
+    lessons = []
+
+
+
     # Open CSV file which has columns: FW | EW | FP | EP
     with open(input_file) as cvs_file:
         csv_reader = csv.reader(cvs_file, delimiter=',')
         for row in csv_reader:
 
             # Assign words & phrases from CSV format
-            phrase_number = row[0]
-            foreign_word_text = row[1]
-            english_word_text = row[2]
-            foreign_phrase_text = row[3]
-            english_phrase_text = row[4]
+            frequency_rank = row[0]
+            foreign_phrase_text = row[1]
+            native_phrase_text = row[2]
+            foreign_sentence_text = row[3]
+            native_sentence_text = row[4]
+
+
+            foreign_phrase = {"text": foreign_phrase_text, "audioResource": ""}
+            native_phrase = {"text": native_phrase_text, "audioResource": ""}
+            phrase = {"foreign": foreign_phrase, "native": native_phrase}
+            foreign_sentence = {"text": foreign_sentence_text, "audioResource": ""}
+            native_sentence = {"text": native_sentence_text, "audioResource": ""}
+            sentence = {"foreign": foreign_sentence, "native": native_sentence}
+            lesson = {"phrase": phrase, "sentence": sentence, "frequencyRank": int(frequency_rank)}
+            lessons.append(lesson)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             # Create WAV files for each word & phrases
             # -----------------------------------------
 
             # Create WAV for FW (Foreign Word)
-            foreign_word_file = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_word_text)
-
-            # Create WAV for EW (English Word)
-            english_word_file = text_to_wav(english_voice_id, english_voice_engine, english_word_text)
-
-            # Create WAV for FP (Foreign Phrase)
             foreign_phrase_file = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_phrase_text)
 
+            # Create WAV for EW (English Word)
+            native_phrase_file = text_to_wav(english_voice_id, english_voice_engine, native_phrase_text)
+
             # Create WAV for FP (Foreign Phrase)
-            foreign_phrase_slow_file = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_phrase_text, voice_speed=80)
+            foreign_sentence_file = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_sentence_text)
+
+            # Create WAV for FP (Foreign Phrase)
+            foreign_sentence_slow_file = text_to_wav(foreign_voice_id, foreign_voice_engine, foreign_sentence_text, voice_speed=80)
 
             # Create WAV for EP (English Phrase)
-            english_phrase_file = text_to_wav(english_voice_id, english_voice_engine, english_phrase_text)
+            native_sentence_file = text_to_wav(english_voice_id, english_voice_engine, native_sentence_text)
 
             # Combine the individual speech files into lessons based on templates
             # -----------------------------------------
@@ -376,99 +410,102 @@ def lessons_from_csv(input_file):
             # Template #0: "FW - EW"
             audio_files = [
                 short_silence_file,
-                foreign_word_file,
+                foreign_phrase_file,
                 medium_silence_file,
-                english_word_file,
+                native_phrase_file,
                 short_silence_file
             ]
             filename_format = "{phrase_number} - {FW} - {EW}".format(
-                phrase_number=phrase_number, FW=foreign_word_text, EW=english_word_text)
+                phrase_number=frequency_rank, FW=foreign_phrase_text, EW=native_phrase_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_0_dir)
 
             # Template #1: "EW - FW"
             audio_files = [
                 short_silence_file,
-                english_word_file,
+                native_phrase_file,
                 medium_silence_file,
-                foreign_word_file,
+                foreign_phrase_file,
                 short_silence_file
             ]
             filename_format = "{phrase_number} - {EW} - {FW}".format(
-                phrase_number=phrase_number, EW=english_word_text, FW=foreign_word_text)
+                phrase_number=frequency_rank, EW=native_phrase_text, FW=foreign_phrase_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_1_dir)
 
             # Template 2: "FW-EW-FP-EP/"
             audio_files = [
                 short_silence_file,
-                foreign_word_file,
-                medium_silence_file,
-                english_word_file,
-                medium_silence_file,
                 foreign_phrase_file,
+                medium_silence_file,
+                native_phrase_file,
+                medium_silence_file,
+                foreign_sentence_file,
                 long_silence_file,
-                english_phrase_file,
+                native_sentence_file,
                 short_silence_file
             ]
             filename_format = "{phrase_number} - {FW} - {EW} - {FP} - {EP}".format(
-                phrase_number=phrase_number, EW=english_word_text, FW=foreign_word_text, EP=english_phrase_text, FP=foreign_phrase_text)
+                phrase_number=frequency_rank, EW=native_phrase_text, FW=foreign_phrase_text, EP=native_sentence_text, FP=foreign_sentence_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_2_dir)
 
             # Template 3: "EW-FW-EP-FP/"
             audio_files = [
                 short_silence_file,
-                english_word_file,
+                native_phrase_file,
                 medium_silence_file,
-                foreign_word_file,
-                medium_silence_file,
-                english_phrase_file,
-                long_silence_file,
                 foreign_phrase_file,
+                medium_silence_file,
+                native_sentence_file,
+                long_silence_file,
+                foreign_sentence_file,
                 short_silence_file
             ]
             filename_format = "{phrase_number} - {EW} - {FW} - {EP} - {FP}".format(
-                phrase_number=phrase_number, EW=english_word_text, FW=foreign_word_text, EP=english_phrase_text, FP=foreign_phrase_text)
+                phrase_number=frequency_rank, EW=native_phrase_text, FW=foreign_phrase_text, EP=native_sentence_text, FP=foreign_sentence_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_3_dir)
 
             # Template 4: "EP/"
             audio_files = [
                 short_silence_file,
-                english_phrase_file,
+                native_sentence_file,
                 short_silence_file
             ]
             filename_format = "{phrase_number} - {EP}".format(
-                phrase_number=phrase_number, EP=english_phrase_text)
+                phrase_number=frequency_rank, EP=native_sentence_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_4_dir)
 
             # Template 5: "FP/"
             audio_files = [
                 short_silence_file,
-                foreign_phrase_file,
+                foreign_sentence_file,
                 short_silence_file
             ]
             filename_format = "{phrase_number} - {FP}".format(
-                phrase_number=phrase_number, FP=foreign_phrase_text)
+                phrase_number=frequency_rank, FP=foreign_sentence_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_5_dir)
 
             # Template 6: "FP+Pause/"
             audio_files = [
                 short_silence_file,
-                foreign_phrase_file,
+                foreign_sentence_file,
                 long_silence_file
             ]
             filename_format = "{phrase_number} - {FP}".format(
-                phrase_number=phrase_number, FP=foreign_phrase_text)
+                phrase_number=frequency_rank, FP=foreign_sentence_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_6_dir)
 
             # Template 7: "FP+Pause (Slow)/"
             audio_files = [
                 short_silence_file,
-                foreign_phrase_slow_file,
+                foreign_sentence_slow_file,
                 long_silence_file
             ]
             filename_format = "{phrase_number} - {FP}".format(
-                phrase_number=phrase_number, FP=foreign_phrase_text)
+                phrase_number=frequency_rank, FP=foreign_sentence_text)
             combine_audio_files_to_mp3(audio_files, filename_format, template_7_dir)
 
+    json_export = open("es-lessons.json", "w")
+    json_export.write(json.dumps(lessons, indent=2))
+    json_export.close()
 
 # Creates silent WAV files of a given length in seconds
 def create_silent_wav_file(seconds):
